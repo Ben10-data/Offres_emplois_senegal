@@ -1,0 +1,91 @@
+[2025-08-08T13:55:25.102+0000] {processor.py:161} INFO - Started process (PID=29) to work on /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:55:25.104+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/PremierDagLake.py for tasks to queue
+[2025-08-08T13:55:25.108+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:55:25.107+0000] {dagbag.py:540} INFO - Filling up the DagBag from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:55:25.145+0000] {processor.py:840} INFO - DAG(s) 'Premier_dag' retrieved from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:55:25.208+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:55:25.207+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2025-08-08T13:55:25.228+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:55:25.228+0000] {dag.py:3954} INFO - Setting next_dagrun for Premier_dag to None, run_after=None
+[2025-08-08T13:55:25.258+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/PremierDagLake.py took 0.183 seconds
+[2025-08-08T13:55:55.353+0000] {processor.py:161} INFO - Started process (PID=30) to work on /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:55:55.356+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/PremierDagLake.py for tasks to queue
+[2025-08-08T13:55:55.362+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:55:55.360+0000] {dagbag.py:540} INFO - Filling up the DagBag from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:55:55.397+0000] {processor.py:840} INFO - DAG(s) 'Premier_dag' retrieved from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:55:55.813+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:55:55.813+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2025-08-08T13:55:55.827+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:55:55.826+0000] {dag.py:3954} INFO - Setting next_dagrun for Premier_dag to None, run_after=None
+[2025-08-08T13:55:55.849+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/PremierDagLake.py took 0.514 seconds
+[2025-08-08T13:56:26.059+0000] {processor.py:161} INFO - Started process (PID=31) to work on /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:56:26.061+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/PremierDagLake.py for tasks to queue
+[2025-08-08T13:56:26.064+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:56:26.064+0000] {dagbag.py:540} INFO - Filling up the DagBag from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:56:26.078+0000] {processor.py:840} INFO - DAG(s) 'Premier_dag' retrieved from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:56:26.129+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:56:26.129+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2025-08-08T13:56:26.144+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:56:26.144+0000] {dag.py:3954} INFO - Setting next_dagrun for Premier_dag to None, run_after=None
+[2025-08-08T13:56:26.170+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/PremierDagLake.py took 0.119 seconds
+[2025-08-08T13:56:56.261+0000] {processor.py:161} INFO - Started process (PID=32) to work on /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:56:56.262+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/PremierDagLake.py for tasks to queue
+[2025-08-08T13:56:56.265+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:56:56.264+0000] {dagbag.py:540} INFO - Filling up the DagBag from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:56:56.279+0000] {processor.py:840} INFO - DAG(s) 'Premier_dag' retrieved from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:56:56.326+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:56:56.325+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2025-08-08T13:56:56.347+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:56:56.347+0000] {dag.py:3954} INFO - Setting next_dagrun for Premier_dag to None, run_after=None
+[2025-08-08T13:56:56.371+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/PremierDagLake.py took 0.119 seconds
+[2025-08-08T13:57:26.556+0000] {processor.py:161} INFO - Started process (PID=33) to work on /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:57:26.558+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/PremierDagLake.py for tasks to queue
+[2025-08-08T13:57:26.560+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:57:26.560+0000] {dagbag.py:540} INFO - Filling up the DagBag from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:57:26.571+0000] {processor.py:840} INFO - DAG(s) 'Premier_dag' retrieved from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:57:26.614+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:57:26.613+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2025-08-08T13:57:26.638+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:57:26.637+0000] {dag.py:3954} INFO - Setting next_dagrun for Premier_dag to None, run_after=None
+[2025-08-08T13:57:26.665+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/PremierDagLake.py took 0.117 seconds
+[2025-08-08T13:57:56.783+0000] {processor.py:161} INFO - Started process (PID=34) to work on /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:57:56.784+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/PremierDagLake.py for tasks to queue
+[2025-08-08T13:57:56.787+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:57:56.786+0000] {dagbag.py:540} INFO - Filling up the DagBag from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:57:56.803+0000] {processor.py:840} INFO - DAG(s) 'Premier_dag' retrieved from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:57:56.858+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:57:56.857+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2025-08-08T13:57:56.895+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:57:56.894+0000] {dag.py:3954} INFO - Setting next_dagrun for Premier_dag to None, run_after=None
+[2025-08-08T13:57:56.949+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/PremierDagLake.py took 0.176 seconds
+[2025-08-08T13:58:27.081+0000] {processor.py:161} INFO - Started process (PID=35) to work on /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:58:27.083+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/PremierDagLake.py for tasks to queue
+[2025-08-08T13:58:27.086+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:58:27.086+0000] {dagbag.py:540} INFO - Filling up the DagBag from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:58:27.097+0000] {processor.py:840} INFO - DAG(s) 'Premier_dag' retrieved from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:58:27.138+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:58:27.137+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2025-08-08T13:58:27.155+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:58:27.154+0000] {dag.py:3954} INFO - Setting next_dagrun for Premier_dag to None, run_after=None
+[2025-08-08T13:58:27.186+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/PremierDagLake.py took 0.113 seconds
+[2025-08-08T13:58:57.314+0000] {processor.py:161} INFO - Started process (PID=36) to work on /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:58:57.315+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/PremierDagLake.py for tasks to queue
+[2025-08-08T13:58:57.317+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:58:57.316+0000] {dagbag.py:540} INFO - Filling up the DagBag from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:58:57.328+0000] {processor.py:840} INFO - DAG(s) 'Premier_dag' retrieved from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:58:57.369+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:58:57.368+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2025-08-08T13:58:57.386+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:58:57.386+0000] {dag.py:3954} INFO - Setting next_dagrun for Premier_dag to None, run_after=None
+[2025-08-08T13:58:57.417+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/PremierDagLake.py took 0.111 seconds
+[2025-08-08T13:59:27.563+0000] {processor.py:161} INFO - Started process (PID=37) to work on /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:59:27.566+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/PremierDagLake.py for tasks to queue
+[2025-08-08T13:59:27.569+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:59:27.568+0000] {dagbag.py:540} INFO - Filling up the DagBag from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:59:27.582+0000] {processor.py:840} INFO - DAG(s) 'Premier_dag' retrieved from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:59:27.624+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:59:27.624+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2025-08-08T13:59:27.645+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:59:27.645+0000] {dag.py:3954} INFO - Setting next_dagrun for Premier_dag to None, run_after=None
+[2025-08-08T13:59:27.676+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/PremierDagLake.py took 0.122 seconds
+[2025-08-08T13:59:57.802+0000] {processor.py:161} INFO - Started process (PID=38) to work on /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:59:57.803+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/PremierDagLake.py for tasks to queue
+[2025-08-08T13:59:57.806+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:59:57.805+0000] {dagbag.py:540} INFO - Filling up the DagBag from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:59:57.816+0000] {processor.py:840} INFO - DAG(s) 'Premier_dag' retrieved from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T13:59:57.856+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:59:57.855+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2025-08-08T13:59:57.885+0000] {logging_mixin.py:188} INFO - [2025-08-08T13:59:57.884+0000] {dag.py:3954} INFO - Setting next_dagrun for Premier_dag to None, run_after=None
+[2025-08-08T13:59:57.912+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/PremierDagLake.py took 0.119 seconds
+[2025-08-08T14:00:28.065+0000] {processor.py:161} INFO - Started process (PID=39) to work on /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T14:00:28.066+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/PremierDagLake.py for tasks to queue
+[2025-08-08T14:00:28.070+0000] {logging_mixin.py:188} INFO - [2025-08-08T14:00:28.069+0000] {dagbag.py:540} INFO - Filling up the DagBag from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T14:00:28.085+0000] {processor.py:840} INFO - DAG(s) 'Premier_dag' retrieved from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T14:00:28.125+0000] {logging_mixin.py:188} INFO - [2025-08-08T14:00:28.124+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2025-08-08T14:00:28.144+0000] {logging_mixin.py:188} INFO - [2025-08-08T14:00:28.144+0000] {dag.py:3954} INFO - Setting next_dagrun for Premier_dag to None, run_after=None
+[2025-08-08T14:00:28.171+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/PremierDagLake.py took 0.115 seconds
+[2025-08-08T14:00:58.279+0000] {processor.py:161} INFO - Started process (PID=40) to work on /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T14:00:58.281+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/PremierDagLake.py for tasks to queue
+[2025-08-08T14:00:58.285+0000] {logging_mixin.py:188} INFO - [2025-08-08T14:00:58.284+0000] {dagbag.py:540} INFO - Filling up the DagBag from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T14:00:58.308+0000] {processor.py:840} INFO - DAG(s) 'Premier_dag' retrieved from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T14:00:58.371+0000] {logging_mixin.py:188} INFO - [2025-08-08T14:00:58.370+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2025-08-08T14:00:58.400+0000] {logging_mixin.py:188} INFO - [2025-08-08T14:00:58.399+0000] {dag.py:3954} INFO - Setting next_dagrun for Premier_dag to None, run_after=None
+[2025-08-08T14:00:58.436+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/PremierDagLake.py took 0.167 seconds
+[2025-08-08T14:01:28.566+0000] {processor.py:161} INFO - Started process (PID=41) to work on /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T14:01:28.568+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/PremierDagLake.py for tasks to queue
+[2025-08-08T14:01:28.570+0000] {logging_mixin.py:188} INFO - [2025-08-08T14:01:28.570+0000] {dagbag.py:540} INFO - Filling up the DagBag from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T14:01:28.582+0000] {processor.py:840} INFO - DAG(s) 'Premier_dag' retrieved from /opt/airflow/dags/PremierDagLake.py
+[2025-08-08T14:01:28.615+0000] {logging_mixin.py:188} INFO - [2025-08-08T14:01:28.615+0000] {dag.py:3096} INFO - Sync 1 DAGs
+[2025-08-08T14:01:28.632+0000] {logging_mixin.py:188} INFO - [2025-08-08T14:01:28.632+0000] {dag.py:3954} INFO - Setting next_dagrun for Premier_dag to None, run_after=None
+[2025-08-08T14:01:28.658+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/PremierDagLake.py took 0.100 seconds

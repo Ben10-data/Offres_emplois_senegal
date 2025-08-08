@@ -1,0 +1,123 @@
+version: '3.7'
+
+services:
+  postgres:
+     image: postgres:13
+     container_name: postgres_job
+     environment:
+          POSTGRES_USER: ben_admin
+          POSTGRES_PASSWORD: airflow
+          POSTGRES_DB: airflow_job
+  
+  mongodb:
+    image: mongo:6
+    container_name: mon_data_lake
+    ports:
+      - 27019:27017 # mongo est exposé a 27019, pour eviter les conflits 
+    volumes:
+      - ../Mongodb:/data/db
+    restart: unless-stopped 
+  
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express_job 
+    ports:
+      - 9090:8081 # j'expose au port 9090 pour eviter les conflit 
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=admin
+    restart: unless-stopped
+    depends_on:
+      - mongodb     
+  
+  airflow-db-init:
+     #image: apache/airflow:2.9.0
+     build:
+       context: .
+       dockerfile: Dockerfile 
+     image: airflow-with-scrapy 
+     depends_on:
+       - postgres
+     environment:
+        AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://ben_admin:airflow@postgres/airflow_job
+        AIRFLOW__WEBSERVER__SECRET_KEY: '34f9a2c7e6b94b11a3f9a6b5a2c7d1e2'
+        AIRFLOW__LOGGING__BASE_LOG_FOLDER: /opt/airflow/logs
+        AIRFLOW__LOGGING__DAG_PROCESSOR_MANAGER_LOG_LOCATION: /opt/airflow/logs/dag_processor_manager/dag_processor_manager.log
+
+     volumes:
+       - ./dags:/opt/airflow/dags
+       - ./logs:/opt/airflow/logs
+       # Montage de notre projet scrapy, pour permettre le container de mieux executer le script
+       - ../Scraping_job:/opt/airflow/scrapjob:rw
+       - ../donnee_du_Lake:/opt/airflow/donne_du_dataLake:rw # stocker nos fichier json
+       - /etc/localtime:/etc/localtime:ro
+
+     entrypoint: 
+       bash -c " airflow db init && 
+       airflow db migrate && 
+       airflow users create \
+        --username admin \
+        --password admin \
+        --firstname Ben \
+        --lastname Tamou \
+        --role Admin \
+        --email benomartamou90@gmail.com "
+  
+  # interface graphique de airflow 
+  airflow-webserver:
+     #image: apache/airflow:2.9.0
+     build:
+       context: .
+       dockerfile: Dockerfile
+     image: airflow-with-scrapy
+     container_name: airflow_web1
+     ports:
+       - 8090:8080 # nous allons exposé notre service web sur le port 9, vu que le 80 est utilisé 
+     depends_on:
+       - postgres
+     environment:
+        AIRFLOW__CORE__EXECUTOR: LocalExecutor
+        AIRFLOW__CORE__PARALLELISM: 32 # nombre dag a lancer en parallele  
+        AIRFLOW__CORE__DAG_CONCURRENCY: 16  #nombre de tache a lancer en parallele par dag 
+        AIRFLOW__CORE__MAX_ACTIVE_RUNS_PER_DAG: 16
+        AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://ben_admin:airflow@postgres/airflow_job
+        AIRFLOW__WEBSERVER__SECRET_KEY: '34f9a2c7e6b94b11a3f9a6b5a2c7d1e2'
+        AIRFLOW__LOGGING__BASE_LOG_FOLDER: /opt/airflow/logs
+        AIRFLOW__LOGGING__DAG_PROCESSOR_MANAGER_LOG_LOCATION: /opt/airflow/logs/dag_processor_manager/dag_processor_manager.log
+     volumes:
+       - ./dags:/opt/airflow/dags
+       - ./logs:/opt/airflow/logs
+       - ../Scraping_job:/opt/airflow/scrapjob:rw
+       #- ./scrapjob:/opt/airflow/scrapjob:rw
+       - ../donnee_du_Lake:/opt/airflow/donne_du_dataLake:rw # stocker nos fichier json
+       - /etc/localtime:/etc/localtime:ro
+
+     command: airflow webserver
+
+  # gestionnaires des taches automatiquement (avec scheduler)
+  airflow-scheduler: 
+     #image: apache/airflow:2.9.0
+     build:
+        context: .
+        dockerfile: Dockerfile
+     image: airflow-with-scrapy
+     container_name: mon_scheduler_job
+     restart: always 
+     depends_on:
+       - airflow-webserver
+     volumes:
+       - ./dags:/opt/airflow/dags
+       - ./logs:/opt/airflow/logs
+       #- /home/ben/Documents/Elastik_Search/Scraping_job/scrapjob:/opt/airflow/scrapjob:rw
+       - ../Scraping_job:/opt/airflow/scrapjob:rw
+       - ../donnee_du_Lake:/opt/airflow/donne_du_dataLake:rw # stocker nos fichier json
+       - /etc/localtime:/etc/localtime:ro
+     environment:
+          AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://ben_admin:airflow@postgres/airflow_job
+          AIRFLOW__WEBSERVER__SECRET_KEY: '34f9a2c7e6b94b11a3f9a6b5a2c7d1e2'
+          AIRFLOW__LOGGING__BASE_LOG_FOLDER: /opt/airflow/logs
+          AIRFLOW__LOGGING__DAG_PROCESSOR_MANAGER_LOG_LOCATION: /opt/airflow/logs/dag_processor_manager/dag_processor_manager.log
+     command: airflow scheduler 
+  
+
