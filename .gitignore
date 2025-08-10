@@ -3,4 +3,4 @@ src/test.ipynb
 basesDeDonnees/MongoData
 basesDeDonnees/MysqlData
 basesDeDonnees/Postgres_Data
-Airflow/logs
+./Airflow/logs/
