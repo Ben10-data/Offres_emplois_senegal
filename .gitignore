@@ -1,6 +1,6 @@
-.benv
+.benv/
 src/test.ipynb
-basesDeDonnees/MongoData
-basesDeDonnees/MysqlData
-basesDeDonnees/Postgres_Data
-./Airflow/logs/
+basesDeDonnees/MongoData/
+basesDeDonnees/MysqlData/
+basesDeDonnees/Postgres_Data/
+Airflow/logs/
