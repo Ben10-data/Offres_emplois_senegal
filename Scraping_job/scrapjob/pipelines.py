@@ -32,7 +32,7 @@ class Indentation_Donnee:
     def close_spider(self, spider):
 
         # creation du dossier de sortie ou pour stocker nos fichier json 
-        dossier_sortie = "/opt/airflow/donne_du_dataLake"
+        dossier_sortie = "/opt/airflow/donnes_des_json"
         os.makedirs(dossier_sortie, exist_ok=True)
 
         # creation des fichiers 

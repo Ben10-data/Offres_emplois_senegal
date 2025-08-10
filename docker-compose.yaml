@@ -1,0 +1,171 @@
+version: '3.7'
+
+services:
+
+##-------- Service de la gestion des dags (Stockages des dags) -----------------------####
+  postgres:
+     image: postgres:13
+     container_name: postgres_dag_job
+     environment:
+          POSTGRES_USER: ${POSTGRES_USER}
+          POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+          POSTGRES_DB: ${POSTGRES_DB}
+
+     
+###-------------------  Nos bases de données ----------------------######
+
+         ###-------------MongoDB-----------------#####
+  mongodb:
+    image: mongo:6
+    container_name: mongoJOb
+    ports:
+      - ${Port_externeMongo}:${Port_interneMongo}
+    volumes:
+      - ./basesDeDonnees/MongoData:/data/db
+    restart: unless-stopped 
+    environment:
+        MONGO_INITDB_ROOT_USERNAME: ${Mongo_user}
+        MONGO_INITDB_ROOT_PASSWORD: ${Mongo_pwd}
+       
+         ### --------------Postgres--------------------------######
+  postgresMetier: 
+       image:  postgres:16
+       container_name: PostgresContainerJOB
+       ports:
+         - "${Port_externe_Post}:5432"
+       environment:
+          POSTGRES_USER: ${Post_user}
+          POSTGRES_PASSWORD: ${Post_pwd}
+          POSTGRES_DB: ${Post_DB}
+       volumes:
+         - ./basesDeDonnees/Postgres_Data:/var/lib/postgresql/data
+
+         ###---------------MysQL----------------------------#######
+  mysql: 
+      image: mysql:latest 
+      container_name: MysqlContainerJOB        
+      environment:
+         MYSQL_DATABASE: ${Mysql_DB}
+         MYSQL_ROOT_PASSWORD: ${Mysql_root_pwd}
+         MYSQL_USER: ${MYSQL_USER}
+         MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      ports:
+        - ${Port_externe_Mysql}:3306
+      volumes:
+        - ./basesDeDonnees/MysqlData:/var/lib/mysql  
+      restart: unless-stopped
+
+
+         ###---------- Cassandra -----------------------#######
+
+
+
+
+
+
+
+###---------- Orchestration avec Airflow ---------------#######
+  airflow-db-init:
+     #image: apache/airflow:2.9.0
+     build:
+       context: .
+       dockerfile: ./Airflow/Dockerfile 
+     image: airflow-with-scrapy 
+     depends_on:
+       - postgres
+     env_file:
+       - .env 
+     environment:
+        AIRFLOW__CORE__SQL_ALCHEMY_CONN: ${AIRFLOW__CORE__SQL_ALCHEMY_CONN}
+        AIRFLOW__WEBSERVER__SECRET_KEY: '34f9a2c7e6b94b11a3f9a6b5a2c7d1e2'
+        AIRFLOW__LOGGING__BASE_LOG_FOLDER: /opt/airflow/logs
+        AIRFLOW__LOGGING__DAG_PROCESSOR_MANAGER_LOG_LOCATION: /opt/airflow/logs/dag_processor_manager/dag_processor_manager.log
+        PYTHONPATH: /opt/airflow/src
+     volumes:
+       - ./Airflow/dags:/opt/airflow/dags
+       - ./Airflow/logs:/opt/airflow/logs
+       - ./Scraping_job:/opt/airflow/scrapjob:rw
+       - ./Dossiers_json_excel_csv:/opt/airflow/Dossiers_json_excel_csv
+       - ./Dossiers_json_excel_csv/json_fichiers:/opt/airflow/Dossiers_json_excel_csv/donnes_des_json:rw # stocker nos fichier json
+       - ./src:/opt/airflow/src:rw
+       - /etc/localtime:/etc/localtime:ro
+       
+
+     entrypoint: 
+       bash -c " airflow db init && 
+       airflow db migrate && 
+       airflow users create \
+        --username ${username} \
+        --password ${password} \
+        --firstname ${firstname} \
+        --lastname ${lastname} \
+        --role ${role} \
+        --email ${email}"
+  
+  # interface graphique de airflow 
+  airflow-webserver:
+     #image: apache/airflow:2.9.0
+     build:
+       context: .
+       dockerfile: ./Airflow/Dockerfile 
+     image: airflow-with-scrapy
+     container_name: airflow_web1
+     ports:
+       - ${Port_externe_Airflow}:8080  
+     depends_on:
+       - postgres
+     env_file:
+       - .env 
+     environment:
+        AIRFLOW__CORE__EXECUTOR: LocalExecutor
+        AIRFLOW__CORE__PARALLELISM: 32 # nombre dag a lancer en parallele  
+        AIRFLOW__CORE__DAG_CONCURRENCY: 16  #nombre de tache a lancer en parallele par dag 
+        AIRFLOW__CORE__MAX_ACTIVE_RUNS_PER_DAG: 16
+        AIRFLOW__CORE__SQL_ALCHEMY_CONN: ${AIRFLOW__CORE__SQL_ALCHEMY_CONN}
+        AIRFLOW__WEBSERVER__SECRET_KEY: '34f9a2c7e6b94b11a3f9a6b5a2c7d1e2'
+        AIRFLOW__LOGGING__BASE_LOG_FOLDER: /opt/airflow/logs
+        AIRFLOW__LOGGING__DAG_PROCESSOR_MANAGER_LOG_LOCATION: /opt/airflow/logs/dag_processor_manager/dag_processor_manager.log
+        PYTHONPATH: /opt/airflow/src   
+     volumes:
+       - ./Airflow/dags:/opt/airflow/dags
+       - ./Airflow/logs:/opt/airflow/logs
+       - ./Scraping_job:/opt/airflow/scrapjob:rw
+       - ./src:/opt/airflow/src:rw
+       - ./Dossiers_json_excel_csv:/opt/airflow/Dossiers_json_excel_csv
+       - ./Dossiers_json_excel_csv/json_fichiers:/opt/airflow/Dossiers_json_excel_csv/donnes_des_json:rw # stocker nos fichier json
+       - /etc/localtime:/etc/localtime:ro
+
+     command: airflow webserver
+
+  # gestionnaires des taches automatiquement (avec scheduler)
+  airflow-scheduler: 
+     #image: apache/airflow:2.9.0
+     build:
+        context: .
+        dockerfile: ./Airflow/Dockerfile 
+     image: airflow-with-scrapy
+     container_name: mon_scheduler_job
+     restart: always 
+     depends_on:
+       - airflow-webserver
+     env_file:
+       - .env 
+     volumes:
+       - ./Airflow/dags:/opt/airflow/dags
+       - ./Airflow/logs:/opt/airflow/logs
+       - ./Scraping_job:/opt/airflow/scrapjob:rw
+       - ./src:/opt/airflow/src:rw
+       - ./Dossiers_json_excel_csv:/opt/airflow/Dossiers_json_excel_csv
+       - ./Dossiers_json_excel_csv/json_fichiers:/opt/airflow/Dossiers_json_excel_csv/donnes_des_json:rw # stocker nos fichier json
+       - /etc/localtime:/etc/localtime:ro
+     environment:
+          AIRFLOW__CORE__SQL_ALCHEMY_CONN: ${AIRFLOW__CORE__SQL_ALCHEMY_CONN}
+          AIRFLOW__WEBSERVER__SECRET_KEY: '34f9a2c7e6b94b11a3f9a6b5a2c7d1e2'
+          AIRFLOW__LOGGING__BASE_LOG_FOLDER: /opt/airflow/logs
+          AIRFLOW__LOGGING__DAG_PROCESSOR_MANAGER_LOG_LOCATION: /opt/airflow/logs/dag_processor_manager/dag_processor_manager.log
+          PYTHONPATH: /opt/airflow/src
+     command: airflow scheduler 
+  
+
+###-----------------Mon dataLake----------------------------------##########
+     ####------------Hadoopp----------------------------------####
