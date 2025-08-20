@@ -12,8 +12,7 @@ with DAG(dag_id="Premier_dag",
     start_date=datetime(2025,7,28), 
     schedule_interval=None,catchup=False, 
     description="Automatisation " \
-    "d\' un pipeline de scraping jusqu' " \
-    "a rapport finale") as dag:
+    "d\' un pipeline ") as dag:
     
     # initialisation de notre dag 
     start_etape = BashOperator(
@@ -21,7 +20,7 @@ with DAG(dag_id="Premier_dag",
         bash_command = "echo Pipeline de cette semaine -offre a tenter sa chance dans la semaine"
     )
 
-    with TaskGroup("Etage_du_scraping",) as group_scraping:
+    with TaskGroup("Etape_du_scrping",) as group_scraping:
         # On cree deux taches qui s'executer automatiquement 
 
         # Premiere tache de la semaine 
@@ -31,7 +30,7 @@ with DAG(dag_id="Premier_dag",
         )
         # Deuxieme tache de la meme semaine 
         tache2 = BashOperator(
-            task_id = "scrapy_Amploi_senegal", 
+            task_id = "scrap_emploi_senegal", 
             bash_command = "cd /opt/airflow/scrapjob/scrapjob/spiders && scrapy crawl emploisenegal",
         )
     
@@ -74,11 +73,23 @@ with DAG(dag_id="Premier_dag",
 
         )
 
+    #------------Groupe des dataLake----------------------------------------###
+
+    with TaskGroup('Alimentation_des_dataLake',) as group_Lake:
+        ...
+
+
+
+    
+
     end_etape = BashOperator(
-        task_id ='end', 
+        task_id ='a_suivre', 
         bash_command = "echo fin - love and peace"
     )
 
 
-    start_etape >> group_scraping >> Ingection_BD >> end_etape
+       
+
+
+    start_etape >> group_scraping >> Ingection_BD >> group_Lake >> end_etape 
     

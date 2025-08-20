@@ -1,0 +1,57 @@
+version: '3.7'
+
+services:
+  
+# ###-------------------  Mes bases de données ----------------------######
+
+#          ###-------------MongoDB-----------------#####
+  mongodb:
+    image: mongo:6
+    container_name: mongoJOb
+    ports:
+      - ${Port_externeMongo}:${Port_interneMongo}
+    volumes:
+      - ./MongoData:/data/db
+    restart: unless-stopped 
+    environment:
+        MONGO_INITDB_ROOT_USERNAME: ${Mongo_user}
+        MONGO_INITDB_ROOT_PASSWORD: ${Mongo_pwd}
+    networks:
+      - offres_emplois_dakar
+       
+#          ### --------------Postgres--------------------------######
+  postgresMetier: 
+       image:  postgres:16
+       container_name: PostgresContainerJOB
+       ports:
+         - "${Port_externe_Post}:5432"
+       environment:
+          POSTGRES_USER: ${Post_user}
+          POSTGRES_PASSWORD: ${Post_pwd}
+          POSTGRES_DB: ${Post_DB}
+       volumes:
+         - ./Postgres_Data:/var/lib/postgresql/data
+       
+       networks:
+         - offres_emplois_dakar
+
+#          ###---------------MysQL----------------------------#######
+  mysql: 
+      image: mysql:latest 
+      container_name: MysqlContainerJOB        
+      environment:
+         MYSQL_DATABASE: ${Mysql_DB}
+         MYSQL_ROOT_PASSWORD: ${Mysql_root_pwd}
+         MYSQL_USER: ${MYSQL_USER}
+         MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      ports:
+        - ${Port_externe_Mysql}:3306
+      volumes:
+        - ./MysqlData:/var/lib/mysql  
+      restart: unless-stopped
+
+      networks:
+        - offres_emplois_dakar
+
+
+     
