@@ -35,9 +35,6 @@ Voici une version réécrite, plus claire et professionnelle de ton texte 👇
 3. **Stockage brut dans un Data Lake** : toutes les données présentes dans les différentes bases sont ensuite **centralisées dans un Data Lake Hadoop**, sans traitement préalable, afin de conserver une copie brute et uniforme des informations.
 
 ---
-
-Veux-tu que je te propose aussi une **version encore plus courte (style résumé en 3 lignes)** pour ton README ou LinkedIn ?
-
 4. **Transformation et nettoyage** des données (ETL).
 
 5. **Orchestration** et automatisation avec **Airflow**.
