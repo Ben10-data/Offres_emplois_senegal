@@ -36,7 +36,7 @@ Voici une version réécrite, plus claire et professionnelle de ton texte 👇
 
 ---
 
-Veux-tu que je te propose aussi une **version encore plus courte (style résumé en 3 lignes)** pour ton README ou LinkedIn ?
+
 
 4. **Transformation et nettoyage** des données (ETL).
 
@@ -59,7 +59,7 @@ pip install -r requirements.txt
 ```
 
 ---
-## 🐳 Démarrage avec Docker
+## Démarrage avec Docker
 
 Lancer tous les services définis dans le projet :
 

@@ -40,6 +40,8 @@ services:
        - ../Dossiers_json_excel_csv/json_fichiers:/opt/airflow/Dossiers_json_excel_csv/donnes_des_json:rw # stocker nos fichier json
        - ../src:/opt/airflow/src:rw
        - /etc/localtime:/etc/localtime:ro
+     restart: unless-stopped 
+
      networks:
         - offres_emplois_dakar
        

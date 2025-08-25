@@ -91,11 +91,17 @@ with DAG(dag_id="Premier_dag",
 
         )
 
+        etape_Lake2 = BashOperator(
+            task_id = "S3",
+            bash_command = "echo salut"
+        )
+
+        Python_mongo_ingection >> etape_Lake2
     
 
     end_etape = BashOperator(
         task_id ='a_suivre', 
-        bash_command = "echo fin - love and peace"
+        bash_command = " a suivre .... "
     )
 
 
