@@ -21,19 +21,19 @@ with DAG(dag_id="Premier_dag",
         bash_command = "echo Pipeline de cette semaine -offre a tenter sa chance dans la semaine"
     )
 
-    # with TaskGroup("Etape_du_scrping",) as group_scraping:
-    #     # On cree deux taches qui s'executer automatiquement 
+    with TaskGroup("Etape_du_scrping",) as group_scraping:
+        # On cree deux taches qui s'executer automatiquement 
 
-    #     # Premiere tache de la semaine 
-    #     tache1 = BashOperator(
-    #         task_id = "scrap_emploi_dakar",
-    #         bash_command = "cd /opt/airflow/scrapjob/scrapjob/spiders && scrapy crawl emploi_dakar"
-    #     )
-    #     # Deuxieme tache de la meme semaine 
-    #     tache2 = BashOperator(
-    #         task_id = "scrap_emploi_senegal", 
-    #         bash_command = "cd /opt/airflow/scrapjob/scrapjob/spiders && scrapy crawl emploisenegal",
-    #     )
+        # Premiere tache de la semaine 
+        tache1 = BashOperator(
+            task_id = "scrap_emploi_dakar",
+            bash_command = "cd /opt/airflow/scrapjob/scrapjob/spiders && scrapy crawl emploi_dakar"
+        )
+        # Deuxieme tache de la meme semaine 
+        tache2 = BashOperator(
+            task_id = "scrap_emploi_senegal", 
+            bash_command = "cd /opt/airflow/scrapjob/scrapjob/spiders && scrapy crawl emploisenegal",
+        )
     
     with TaskGroup("Alimentation_des_bases_de_données",) as Ingection_BD:
         
@@ -100,7 +100,7 @@ with DAG(dag_id="Premier_dag",
 
 
        
-    #group_scraping >>
+    #
 
-    start_etape >> Ingection_BD >> group_Lake >> end_etape 
+    start_etape >>group_scraping >> Ingection_BD >> group_Lake >> end_etape 
     
