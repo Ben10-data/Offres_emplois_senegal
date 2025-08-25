@@ -6,7 +6,7 @@ from airflow.decorators import task
 from airflow.utils.task_group import TaskGroup
 from datetime import datetime
 
-from utils_BD import Gestion_des_donnees
+from utils_BD import Gestion_des_donnees #<--- Ceci est possible vu qu'on a definit un pythonPath
 from Utils_Data_Lake import ConnexionLake
 
 with DAG(dag_id="Premier_dag", 
@@ -86,14 +86,10 @@ with DAG(dag_id="Premier_dag",
             alimentation_duLake.mysql_to_hdfs()
 
         Python_mongo_ingection = PythonOperator(
-            task_id="Injection_a_partir_mongo_post_mysql",
+            task_id="hadoop_Lake",
             python_callable=inject_Lake
 
         )
-
-
-
-
 
     
 
