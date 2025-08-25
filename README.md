@@ -20,11 +20,9 @@ offres_emplois/
 
 Mettre en place une **pipeline complète de collecte et d’analyse des offres d’emplois au sengal** :
 
-Voici une version réécrite, plus claire et professionnelle de ton texte 👇
-
 ---
 
-1. **Scraping** des données depuis différentes plateformes, notamment **EmploiSenegal.com** et **Senjob**.
+1. **Scraping** des données depuis différentes plateformes, notamment **EmploiSenegal.com** et **Senjob.com**.
 
 2. **Stockage des données dans différentes bases** : **MySQL, PostgreSQL et MongoDB**.
 
@@ -35,9 +33,6 @@ Voici une version réécrite, plus claire et professionnelle de ton texte 👇
 3. **Stockage brut dans un Data Lake** : toutes les données présentes dans les différentes bases sont ensuite **centralisées dans un Data Lake Hadoop**, sans traitement préalable, afin de conserver une copie brute et uniforme des informations.
 
 ---
-
-
-
 4. **Transformation et nettoyage** des données (ETL).
 
 5. **Orchestration** et automatisation avec **Airflow**.
@@ -59,7 +54,7 @@ pip install -r requirements.txt
 ```
 
 ---
-## Démarrage avec Docker
+## 🐳 Démarrage avec Docker
 
 Lancer tous les services définis dans le projet :
 
