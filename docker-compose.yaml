@@ -5,6 +5,7 @@ version: '3.7'
 include:
     - ./Airflow/docker-compose.airflow.yaml
     - ./basesDeDonnees/docker-compose.databases.yaml
+    - ./Datalakes/docker-compose.lake.yaml
 
 
 networks:

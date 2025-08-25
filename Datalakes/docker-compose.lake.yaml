@@ -1,0 +1,86 @@
+version: '3.7'
+
+##------------------ Comme DataLake ----------------------------------###
+# Nous allons ututiliser hadoop comme Lake local, et S3 lake d'archivage----#
+
+services:
+  
+  #------------------ Hadoop ------------------------------------# 
+  
+  namenode:
+    image: apache/hadoop:3.3.5
+    container_name: namenodeJob
+    hostname: namenode
+    command: ["hdfs", "namenode"]
+    ports:
+      - 9870:9870
+      - 8020:8020  # ← Port pour connexions HDFS
+    env_file:
+      - ../Datalakes/config
+    environment:
+      ENSURE_NAMENODE_DIR: "/tmp/hadoop-root/dfs/name"
+    volumes:
+      - ./hadoop_namenode:/hadoop/dfs/name
+      - ./hadoop_logs:/opt/hadoop/logs
+    networks:
+      - offres_emplois_dakar
+
+  datanode:
+      image: apache/hadoop:3.3.5
+      container_name: datanodeJob
+      hostname: datanode
+      command: ["hdfs", "datanode"]
+      ports:
+        - "9864:9864"  # ← Port WebHDFS du datanode
+        - "9866:9866"  # ← Port de données du datanode
+        - "9867:9867"  # ← Port IPC du datanode
+      env_file:
+        - ../Datalakes/config
+      volumes:
+        - ./hadoop_datanode:/hadoop/dfs/data
+        - ./hadoop_logs:/opt/hadoop/logs
+      depends_on:
+        - namenode
+      networks:
+        - offres_emplois_dakar
+
+  resourcemanager:
+      image: apache/hadoop:3.3.5
+      container_name: ressource_Job
+      hostname: resourcemanager
+      command: ["yarn", "resourcemanager"]
+      ports:
+        - 8088:8088 
+      env_file:
+        - ../Datalakes/config
+      volumes:
+        - ../Datalakes/test.sh:/opt/test.sh
+        - ./yarn_logs:/opt/hadoop/yarn-logs
+        - ./hadoop_logs:/opt/hadoop/logs
+
+      depends_on:
+        - namenode
+      networks:
+        - offres_emplois_dakar
+
+  nodemanager:
+      image: apache/hadoop:3.3.5
+      container_name: node_managerJob
+      hostname: nodemanager
+      command: ["yarn", "nodemanager"]
+      env_file:
+        - ../Datalakes/config
+      volumes:
+        - ./yarn_logs:/opt/hadoop/yarn-logs
+        - ./hadoop_logs:/opt/hadoop/logs
+      depends_on:
+        - namenode
+        - resourcemanager
+      networks:
+        - offres_emplois_dakar
+
+  
+
+ # ----------- AWS-S3 (Archivage cloud) -----------------------#
+
+  

@@ -4,54 +4,71 @@ from sqlalchemy import create_engine
 from pymongo import MongoClient
 import datetime
 
-class Gestion_des_donnees:
+from dotenv import load_dotenv
+load_dotenv()
 
-    def __init__(self, dossiers_sources):
-        self.dossiers = dossiers_sources
-        self.postgres_connection = self.get_postCon()
-        self.mongo_connection = self.get_mongoCon() 
-        self.date = datetime.date.today()
-        self.mysql_connection = self.get_mysql_conn()
+#---------------- La classe pour assurer les connexion au base de données--------#
+class ConnexionDB:
+
+    def __init__(self):
+        self._mysql_connection = None 
+        self._postgres_connection = None
+        self._mongo_connection = None 
+        self._client_airflow = None 
+
     
+
     #-------------- connection Mysql -----------------------#
     def get_mysql_conn(self):
-        user="root"
-        host = "mysql"
-        password = os.getenv('Mysql_root_pwd')
-        port = 3306
-        db = os.getenv('Mysql_DB')
+        if self._mysql_connection is None:
+            user="root"
+            host = "mysql"
+            password = os.getenv('Mysql_root_pwd')
+            port = 3306
+            db = os.getenv('Mysql_DB')
+            self._mysql_connection = create_engine(f"mysql+pymysql://{user}:{password}@{host}:{port}/{db}")
 
-        return create_engine(f"mysql+pymysql://{user}:{password}@{host}:{port}/{db}")
+        return self._mysql_connection
     
     #-------------- connection Postgres -----------------------#
     def get_postCon(self):
-        user = os.getenv('Post_user')
-        host = "postgresMetier"
-        password=os.getenv('Post_pwd')
-        port = 5432
-        db= os.getenv('Post_DB')
-        return create_engine(f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{db}")
+        if self._postgres_connection is None : 
+            user = os.getenv('Post_user')
+            host = "postgresMetier"
+            password=os.getenv('Post_pwd')
+            port = 5432
+            db= os.getenv('Post_DB')
+            self._postgres_connection = create_engine(f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{db}")
+    
+        return self._postgres_connection
     
     #-------------- connection MongoDB -----------------------#
     def get_mongoCon(self, nom_de_la_base="Donnees_JOB"):
-        user_mongo = os.getenv('Mongo_user')
-        password = os.getenv('Mongo_pwd')
-        host = "mongodb"
-        port = 27017
-        uri = f"mongodb://{user_mongo}:{password}@{host}:{port}/?authSource=admin"
-        client = MongoClient(uri)
-        db = client[nom_de_la_base]
-        return db
+        if self._mongo_connection is None: 
+            user_mongo = os.getenv('Mongo_user')
+            password = os.getenv('Mongo_pwd')
+            host = "mongodb"
+            port = 27017
+            uri = f"mongodb://{user_mongo}:{password}@{host}:{port}/?authSource=admin"
+            client = MongoClient(uri)
+            self._mongo_connection = client[nom_de_la_base]
+        return self._mongo_connection
     
-    #-------------- connection Cassandra -----------------------#
+    
 
+   
 
+#-------------------- Ingection au bases de donnéees-----------------#
 
+class Gestion_des_donnees(ConnexionDB):
 
-    #-------------- connection Neo4J -----------------------#
+    def __init__(self, dossiers_sources):
+        super().__init__()
+        self.dossiers = dossiers_sources
+        self.date = datetime.date.today()
+        
 
-
-
+#------------------ Lecture des fichiers -----------------------------#
     
     def liens_des_fichiers(self):
 
@@ -76,7 +93,7 @@ class Gestion_des_donnees:
                 pd_csv = pd.read_csv(el)
                 pd_csv.to_sql(
                   name= f"{nom_du_table}_{self.date}".replace('-','_'), 
-                  con= self.postgres_connection,          
+                  con= self.get_postCon(),          
                   if_exists="replace",       
                   index=False                
                 )
@@ -84,7 +101,7 @@ class Gestion_des_donnees:
                 pd_excel = pd.read_excel(el)
                 pd_excel.to_sql(
                     name=f"{nom_du_table}_{self.date}".replace('-','_'),
-                    con= self.postgres_connection,
+                    con= self.get_postCon(),
                     if_exists="replace",
                     index=False
                 )
@@ -93,7 +110,7 @@ class Gestion_des_donnees:
                 pd_json = pd.read_json(el)
                 pd_json.to_sql(
                     name=f"{nom_du_table}_{self.date}".replace('-','_'),
-                    con= self.postgres_connection,
+                    con= self.get_postCon(),
                     if_exists="replace",
                     index=False
                 )
@@ -109,7 +126,7 @@ class Gestion_des_donnees:
                 pd_csv = pd.read_csv(el)
                 pd_csv.to_sql(
                   name= f"{nom_du_table}_{self.date}".replace('-','_'),   
-                  con= self.mysql_connection,          
+                  con= self.get_mysql_conn(),          
                   if_exists="replace",       
                   index=False                
                 )
@@ -117,7 +134,7 @@ class Gestion_des_donnees:
                 pd_excel = pd.read_excel(el)
                 pd_excel.to_sql(
                     name=f"{nom_du_table}_{self.date}".replace('-','_'),
-                    con= self.mysql_connection,
+                    con= self.get_mysql_conn(),
                     if_exists="replace",
                     index=False
                 )
@@ -125,7 +142,7 @@ class Gestion_des_donnees:
                 pd_json = pd.read_json(el)
                 pd_json.to_sql(
                     name=f"{nom_du_table}_{self.date}".replace('-','_'),
-                    con= self.mysql_connection,
+                    con= self.get_mysql_conn(),
                     if_exists="replace",
                     index=False
                 )
@@ -136,7 +153,7 @@ class Gestion_des_donnees:
         fichiers = self.liens_des_fichiers()
         for el in fichiers:
             nom_de_la_collection = self.extrait_nom(el) # chaque fichier est une collection
-            collection = self.mongo_connection[f"{nom_de_la_collection}_{self.date}".replace('-','_')]
+            collection = self.get_mongoCon()[f"{nom_de_la_collection}_{self.date}".replace('-','_')]
             # stockage des fichier csv 
             if el.endswith('.csv'):
                 pd_csv = pd.read_csv(el)

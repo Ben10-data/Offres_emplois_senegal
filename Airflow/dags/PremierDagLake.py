@@ -7,6 +7,7 @@ from airflow.utils.task_group import TaskGroup
 from datetime import datetime
 
 from utils_BD import Gestion_des_donnees
+from Utils_Data_Lake import ConnexionLake
 
 with DAG(dag_id="Premier_dag", 
     start_date=datetime(2025,7,28), 
@@ -20,19 +21,19 @@ with DAG(dag_id="Premier_dag",
         bash_command = "echo Pipeline de cette semaine -offre a tenter sa chance dans la semaine"
     )
 
-    with TaskGroup("Etape_du_scrping",) as group_scraping:
-        # On cree deux taches qui s'executer automatiquement 
+    # with TaskGroup("Etape_du_scrping",) as group_scraping:
+    #     # On cree deux taches qui s'executer automatiquement 
 
-        # Premiere tache de la semaine 
-        tache1 = BashOperator(
-            task_id = "scrap_emploi_dakar",
-            bash_command = "cd /opt/airflow/scrapjob/scrapjob/spiders && scrapy crawl emploi_dakar"
-        )
-        # Deuxieme tache de la meme semaine 
-        tache2 = BashOperator(
-            task_id = "scrap_emploi_senegal", 
-            bash_command = "cd /opt/airflow/scrapjob/scrapjob/spiders && scrapy crawl emploisenegal",
-        )
+    #     # Premiere tache de la semaine 
+    #     tache1 = BashOperator(
+    #         task_id = "scrap_emploi_dakar",
+    #         bash_command = "cd /opt/airflow/scrapjob/scrapjob/spiders && scrapy crawl emploi_dakar"
+    #     )
+    #     # Deuxieme tache de la meme semaine 
+    #     tache2 = BashOperator(
+    #         task_id = "scrap_emploi_senegal", 
+    #         bash_command = "cd /opt/airflow/scrapjob/scrapjob/spiders && scrapy crawl emploisenegal",
+    #     )
     
     with TaskGroup("Alimentation_des_bases_de_données",) as Ingection_BD:
         
@@ -76,7 +77,21 @@ with DAG(dag_id="Premier_dag",
     #------------Groupe des dataLake----------------------------------------###
 
     with TaskGroup('Alimentation_des_dataLake',) as group_Lake:
-        ...
+        
+        alimentation_duLake = ConnexionLake()
+
+        def inject_Lake():
+            alimentation_duLake.post_to_hdfs()
+            alimentation_duLake.mongo_to_hdfs()
+            alimentation_duLake.mysql_to_hdfs()
+
+        Python_mongo_ingection = PythonOperator(
+            task_id="Injection_a_partir_mongo_post_mysql",
+            python_callable=inject_Lake
+
+        )
+
+
 
 
 
@@ -89,7 +104,7 @@ with DAG(dag_id="Premier_dag",
 
 
        
+    #group_scraping >>
 
-
-    start_etape >> group_scraping >> Ingection_BD >> group_Lake >> end_etape 
+    start_etape >> Ingection_BD >> group_Lake >> end_etape 
     

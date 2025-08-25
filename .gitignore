@@ -1,6 +1,12 @@
 .benv/
 src/test.ipynb
+src/test.py 
 basesDeDonnees/MongoData/
 basesDeDonnees/MysqlData/
 basesDeDonnees/Postgres_Data/
 Airflow/logs/
+Datalakes/hadoop_datanode/
+Datalakes/hadoop_namenode/
+Datalakes/test.sh/
+Datalakes/yarn_logs/
+Datalakes/hadoop_logs/
