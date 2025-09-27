@@ -1,0 +1,18 @@
+version: '3.7'
+
+services:
+  
+  postgres_warehouse:
+    image: postgres:16
+    container_name: postgres_warehouse
+    ports:
+      - "${Port_externe_Warehouse}:5432"
+    environment:
+          POSTGRES_USER: ${Post_user_warehouse}
+          POSTGRES_PASSWORD: ${Post_pwd_warehouse}
+          POSTGRES_DB: ${DB_Warehouse}
+    volumes:
+      - ./DataWarhouse_data:/var/lib/postgresql/data # nous allons persister nos données ici 
+    networks:
+      - offres_emplois_dakar
+    

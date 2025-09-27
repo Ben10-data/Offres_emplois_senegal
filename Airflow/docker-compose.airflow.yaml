@@ -3,6 +3,8 @@ version: '3.7'
 services:
 
   ##-------- Service de la gestion des dags (Stockages des dags) -----------------------####
+ 
+  ### ---- Nous utlisons ici une base de données Postgres pour stocker nos dags -------###
   postgres:
      image: postgres:13
      container_name: postgres_dag1
@@ -14,6 +16,7 @@ services:
         - .env
      networks:
        - offres_emplois_dakar
+
 
 ###---------- Orchestration avec Airflow ---------------#######
   airflow-db-init:

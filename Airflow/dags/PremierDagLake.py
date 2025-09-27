@@ -6,7 +6,7 @@ from airflow.decorators import task
 from airflow.utils.task_group import TaskGroup
 from datetime import datetime
 
-from utils_BD import Gestion_des_donnees #<--- Ceci est possible vu qu'on a definit un pythonPath
+from utils_BD import Gestion_des_donnees #Ceci est possible vu qu'on a definit un pythonPath
 from Utils_Data_Lake import ConnexionLake
 
 with DAG(dag_id="Premier_dag", 

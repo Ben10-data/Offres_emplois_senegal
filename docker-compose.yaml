@@ -6,18 +6,25 @@ include:
     - ./Airflow/docker-compose.airflow.yaml
     - ./basesDeDonnees/docker-compose.databases.yaml
     - ./Datalakes/docker-compose.lake.yaml
+    - ./DataWarehouse/docker-compose.warehouse.yaml
 
 
 networks:
     offres_emplois_dakar:
         external: true
      
-#--------------#
-# probleme 
-#-------------#
+
+
+
+
+#######---------------------------------------------#####
+                # probleme rencontré 
+######-------------------------------------------------######
+
 # Faut verifier si le network est creer par prune
-# si c'est pas le cas, faut le creer manuellement 
-# sudo docker network create offres_emplois_dakar
+# si c'est pas le cas, faut le creer manuellement, en utilisant la commande suivante 
+           
+        # sudo docker network create offres_emplois_dakar
 
 
 
