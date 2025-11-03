@@ -1,4 +1,4 @@
-version: '3.7'
+version: '3.8'
 
 # services:
 
@@ -7,12 +7,12 @@ include:
     - ./basesDeDonnees/docker-compose.databases.yaml
     - ./Datalakes/docker-compose.lake.yaml
     - ./DataWarehouse/docker-compose.warehouse.yaml
+    # - ./Spark/docker-compose.spark.yaml
 
 
 networks:
     offres_emplois_dakar:
         external: true
-     
 
 
 

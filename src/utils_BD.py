@@ -125,10 +125,10 @@ class Gestion_des_donnees(ConnexionDB):
             if el.endswith('.csv'):
                 pd_csv = pd.read_csv(el)
                 pd_csv.to_sql(
-                  name= f"{nom_du_table}_{self.date}".replace('-','_'),   
-                  con= self.get_mysql_conn(),          
-                  if_exists="replace",       
-                  index=False                
+                    name= f"{nom_du_table}_{self.date}".replace('-','_'),   
+                    con= self.get_mysql_conn(),          
+                    if_exists="replace",       
+                    index=False                
                 )
             elif el.endswith('.xls'or '.xlsx'):
                 pd_excel = pd.read_excel(el)

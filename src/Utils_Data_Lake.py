@@ -57,7 +57,10 @@ class ConnexionLake(ConnexionDB):
             
             # Conversion des bases mysql en dataframes spark et inject --> hdfs 
             df_spark = spark.createDataFrame(df_mysql)
-            df_spark.write.mode("overwrite").parquet("hdfs://namenode:8020/ben/dataLake")
+            df_spark.write.mode("append").parquet("hdfs://namenode:8020/ben/dataLake")
+            
+            
+            
             
         return f'Datalake bien alimenté a partir de mysql a {datetime.now().ctime()}'
     
@@ -76,7 +79,7 @@ class ConnexionLake(ConnexionDB):
                 .getOrCreate()
             
             df_spark = spark.createDataFrame(df_postgres)
-            df_spark.write.mode("overwrite").parquet("hdfs://namenode:8020/ben/dataLake")
+            df_spark.write.mode("append").parquet("hdfs://namenode:8020/ben/dataLake")
         
         return f'Datalake bien alimenté a partir de Postgres a {datetime.now().ctime()}'
 
@@ -99,7 +102,7 @@ class ConnexionLake(ConnexionDB):
                 .getOrCreate()
             
            df_spark = spark.createDataFrame(df_mongo)
-           df_spark.write.mode("overwrite").parquet("hdfs://namenode:8020/ben/dataLake")
+           df_spark.write.mode("append").parquet("hdfs://namenode:8020/ben/dataLake")
         
         return f'Datalake bien alimenté a partir de MongoDB a {datetime.now().ctime()}'
 
