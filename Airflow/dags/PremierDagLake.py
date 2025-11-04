@@ -101,11 +101,11 @@ with DAG(dag_id="Premier_dag",
 
     end_etape = BashOperator(
         task_id ='a_suivre', 
-        bash_command = " a suivre .... "
+        bash_command = " echo a suivre .... "
     )
 
 
-       
+
     #
 
     start_etape >>group_scraping >> Ingection_BD >> group_Lake >> end_etape 
