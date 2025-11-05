@@ -128,6 +128,7 @@ services:
       - ../Spark/app:/opt/spark/app
       - ../Spark/app/data:/data
       - ./hadoop-config:/opt/hadoop/etc/hadoop
+      - ../Spark/script-sparkshell:/home/spark
     depends_on:
       - namenode
       - datanode1

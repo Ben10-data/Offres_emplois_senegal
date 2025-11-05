@@ -1,0 +1,1337 @@
+Script started on 2025-11-05 15:29:12+00:00 [TERM="xterm" TTY="/dev/pts/1" COLUMNS="116" LINES="23"]
+$ pysppark     	park
+Python 3.10.12 (main, Aug 15 2025, 14:32:43) [GCC 11.4.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+25/11/05 15:29:31 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+Welcome to
+      ____              __
+     / __/__  ___ _____/ /__
+    _\ \/ _ \/ _ `/ __/  '_/
+   /__ / .__/\_,_/_/ /_/\_\   version 3.5.7
+      /_/
+
+Using Python version 3.10.12 (main, Aug 15 2025 14:32:43)
+Spark context Web UI available at http://a3c06d14204f:4040
+Spark context available as 'sc' (master = local[*], app id = local-1762356572947).
+SparkSession available as 'spark'.
+>>> sa[Kpark.version
+'3.5.7'
+>>> from pyspark.sql import SparkSession
+>>> from pyspark.sql.functions import col, split
+>>> from pyspark.sql import functions as F 
+>>> col
+<function col at 0x7fdb8024ef80>
+>>> split
+<function split at 0x7fdb801253f0>
+>>> F
+<module 'pyspark.sql.functions' from '/opt/spark/python/pyspark/sql/functions.py'>
+>>> [K>>> [K>>> [K>>> [K>>> [K>>> [K>>> [K>>> [K>>> [K>>> [K>>> [K>>> 
+>>> # version de la version de spark 
+>>> spark.version
+'3.5.7'
+>>> 
+>>> # lecture de nos fichier hdfs 
+>>> df = spark.read.parquet("hdfs://namenode:8020/ben/dataLake/")
+.dropDuplicates()
+# compter les nombres de lignes qu'on a 
+df.count()
+
+# voir le schema ou les differents colonnes de nos données 
+df.printSchema()
+
+# >>> df.printSchema()
+# root
+#  |-- entreprise: string (nullable = true)
+#  |-- poste: string (nullable = true)
+#  |-- niveau_etude: string (nullable = true)
+#  |-- niveau_experience: string (nullable = true)
+#  |-- contrat_propose: string (nullable = true)
+#  |-- region: string (nullable = true)
+#  |-- Competence: string (nullable = true)
+#  |-- date_de_publication: string (nullable = true)
+#  |-- formation: string (nullable = true)
+
+# Les nombres de differents poste et  entreprises existantes 
+df.select("poste").distinct().count()
+
+df.select("entreprise").distinct().count()
+
+#----------------- *** Colonnes a nettoyer et organiser ***-----------------------#
+# Apres un passage de select, exemple la colonne suivant '"entreprise"
+df.select("entreprise").distinct().show(5, truncate=False)
+
+
+
+###---------------µ*******************************************----------------###
+
+####     niveau_etude , niveau_experience, contrat_propose
+####     region, Competence, formation
+
+###------------- traitement de chaque colonne -------------------------------- ###### 
+
+# ---------------- pour la colonne formation 
+
+df_formation = df.withColumn(
+    "formation_clean",
+    F.trim(
+        F.regexp_replace(F.col("formation"), r"</li><li>", ", "))
+)
+
+df_formation = df_formation.withColumn(
+    "formation_clean",
+    F.regexp_replace(F.col("formation_clean"), r"</?li>", "")
+)
+
+df_formation = df_formation.withColumn(
+    "formation_clean",
+    F.regexp_replace(F.col("formation_clean"), r"[\n]", "")
+)
+
+df_formation = df_formation.withColumn(
+    "formation_clean",
+    F.regexp_replace(F.col("formation_clean"),r"</?strong>", "")
+)
+
+df_formation = df_formation.withColumn(
+    "formation_clean",
+    F.trim(F.regexp_replace(F.col("formation_clean"), r"<[^>]+>", ""))
+)
+
+df_formation.drop("formation")
+
+#-------------- Pour la colonne niveau_etude--------------
+
+df_etude = df_formation.withColumn(
+    "niveau_etude_clean",
+    split(col("niveau_etude"), r"\s*(?:,|&|et)\s*")
+)
+
+df_etude = df_etude.drop("niveau_etude")
+df_etude = df_etude.drop("formation")
+
+##------------ contract proposé ---------------------------
+df_contract = df_etude.withColumn(
+    "contract",
+    split(col("contrat_propose"), r"\s*(?:,|&|et)\s*")
+)
+
+df_contract = df_contract.drop("contrat_propose")
+
+### ------------- Pour la region 
+
+df_region = df_contract.withColumn(
+    "region_clean",
+    F.trim(F.regexp_replace(F.col("region"), r"\s*(?:\n|\t)", ""))
+
+)
+
+df_region = df_region.drop("region")
+
+# ----- experience 
+
+df_experience = df_region.withColumn(
+    "experience", 
+    split(col("niveau_experience"), r"\s*(?:,|&|-)\s*")
+)
+
+df_experience = df_experience.drop("niveau_experience")
+
+
+#---------- Traitement des competences 
+
+df_competence = df_experience.withColumn(
+    "competences",
+    split(col("Competence"), r"\s*(-)\s*")
+)
+
+###---------------------------------------------------------------------------------#######""
+#------------------------------------------------------------------------------------#
+# Creation de la premiere dataset qui contient toutes les données 
+
+df_clean = df_competence.drop("Competence")
+
+
+###---------------------------------------------------------------------------------#######""
+#------------------------------------------------------------------------------------#
+# Creation du deuxieme dataset pour le machine learning
+
+#df_ml =
+
+df_clean.show(5, truncate=False)
+[Stage 0:>                                                          (0 + 1) / 1]                                                                                >>> df = df.dropDuplicates()
+>>> # compter les nombres de lignes qu'on a 
+>>> df.count()
+[Stage 1:>                                                        (0 + 12) / 19][Stage 1:===>                                                     (1 + 14) / 19][Stage 1:=====================>                                   (7 + 12) / 19][Stage 1:====================================>                    (12 + 7) / 19][Stage 1:=======================================>                 (13 + 6) / 19]                                                                                420
+>>> 
+>>> # voir le schema ou les differents colonnes de nos données 
+>>> df.printSchema()
+root
+ |-- entreprise: string (nullable = true)
+ |-- poste: string (nullable = true)
+ |-- niveau_etude: string (nullable = true)
+ |-- niveau_experience: string (nullable = true)
+ |-- contrat_propose: string (nullable = true)
+ |-- region: string (nullable = true)
+ |-- Competence: string (nullable = true)
+ |-- date_de_publication: string (nullable = true)
+ |-- formation: string (nullable = true)
+
+>>> 
+>>> # >>> df.printSchema()
+>>> # root
+>>> #  |-- entreprise: string (nullable = true)
+>>> #  |-- poste: string (nullable = true)
+>>> #  |-- niveau_etude: string (nullable = true)
+>>> #  |-- niveau_experience: string (nullable = true)
+>>> #  |-- contrat_propose: string (nullable = true)
+>>> #  |-- region: string (nullable = true)
+>>> #  |-- Competence: string (nullable = true)
+>>> #  |-- date_de_publication: string (nullable = true)
+>>> #  |-- formation: string (nullable = true)
+>>> 
+>>> # Les nombres de differents poste et  entreprises existantes 
+>>> df.select("poste").distinct().count()
+[Stage 7:>                                                        (0 + 12) / 19][Stage 7:=========>                                               (3 + 12) / 19][Stage 7:===========================>                             (9 + 10) / 19][Stage 7:====================================>                    (12 + 7) / 19][Stage 7:=======================================>                 (13 + 6) / 19]                                                                                401
+>>> 
+>>> df.select("entreprise").distinct().count()
+[Stage 13:>                                                       (0 + 12) / 19][Stage 13:==>                                                     (1 + 12) / 19][Stage 13:=================>                                      (6 + 12) / 19][Stage 13:===================================>                    (12 + 7) / 19][Stage 13:======================================>                 (13 + 6) / 19]                                                                                209
+>>> 
+>>> #----------------- *** Colonnes a nettoyer et organiser ***-----------------------#
+>>> # Apres un passage de select, exemple la colonne suivant '"entreprise"
+>>> df.select("entreprise").distinct().show(5, truncate=False)
+[Stage 19:>                                                       (0 + 12) / 19][Stage 19:==>                                                     (1 + 12) / 19][Stage 19:==============>                                         (5 + 13) / 19][Stage 19:===================================>                    (12 + 7) / 19][Stage 19:======================================>                 (13 + 6) / 19][Stage 19:===============================================>        (16 + 3) / 19]                                                                                +----------------------------------------+
+|entreprise                              |
++----------------------------------------+
+|TECTRA SÉNÉGAL                          |
+|MOUABI                                  |
+|VISION PLUS VOYAGE                      |
+|SOCIÉTÉ DE PROMOTION ET DE CONSTRUCTION |
+|NEXGEN TALENT                           |
++----------------------------------------+
+only showing top 5 rows
+
+>>> 
+>>> 
+>>> 
+>>> ###---------------µ*******************************************----------------###
+>>> 
+>>> ####     niveau_etude , niveau_experience, contrat_propose
+>>> ####     region, Competence, formation
+>>> 
+>>> ###------------- traitement de chaque colonne -------------------------------- ###### 
+>>> 
+>>> # ---------------- pour la colonne formation 
+>>> 
+>>> df_formation = df.withColumn(
+...     "formation_clean",
+...     F.trim(
+...         F.regexp_replace(F.col("formation"), r"</li><li>", ", "))
+... )
+>>> 
+>>> df_formation = df_formation.withColumn(
+...     "formation_clean",
+...     F.regexp_replace(F.col("formation_clean"), r"</?li>", "")
+... )
+>>> 
+>>> df_formation = df_formation.withColumn(
+...     "formation_clean",
+...     F.regexp_replace(F.col("formation_clean"), r"[\n]", "")
+... )
+>>> 
+>>> df_formation = df_formation.withColumn(
+...     "formation_clean",
+...     F.regexp_replace(F.col("formation_clean"),r"</?strong>", "")
+... )
+>>> 
+>>> df_formation = df_formation.withColumn(
+...     "formation_clean",
+...     F.trim(F.regexp_replace(F.col("formation_clean"), r"<[^>]+>", ""))
+... )
+>>> 
+>>> df_formation.drop("formation")
+DataFrame[entreprise: string, poste: string, niveau_etude: string, niveau_experience: string, contrat_propose: string, region: string, Competence: string, date_de_publication: string, formation_clean: string]
+>>> 
+>>> #-------------- Pour la colonne niveau_etude--------------
+>>> 
+>>> df_etude = df_formation.withColumn(
+...     "niveau_etude_clean",
+...     split(col("niveau_etude"), r"\s*(?:,|&|et)\s*")
+... )
+>>> 
+>>> df_etude = df_etude.drop("niveau_etude")
+>>> df_etude = df_etude.drop("formation")
+>>> 
+>>> ##------------ contract proposé ---------------------------
+>>> df_contract = df_etude.withColumn(
+...     "contract",
+...     split(col("contrat_propose"), r"\s*(?:,|&|et)\s*")
+... )
+>>> 
+>>> df_contract = df_contract.drop("contrat_propose")
+>>> 
+>>> ### ------------- Pour la region 
+>>> 
+>>> df_region = df_contract.withColumn(
+...     "region_clean",
+...     F.trim(F.regexp_replace(F.col("region"), r"\s*(?:\n|\t)", ""))
+... 
+... )
+>>> 
+>>> df_region = df_region.drop("region")
+>>> 
+>>> # ----- experience 
+>>> 
+>>> df_experience = df_region.withColumn(
+...     "experience", 
+...     split(col("niveau_experience"), r"\s*(?:,|&|-)\s*")
+... )
+>>> 
+>>> df_experience = df_experience.drop("niveau_experience")
+>>> 
+>>> 
+>>> #---------- Traitement des competences 
+>>> 
+>>> df_competence = df_experience.withColumn(
+...     "competences",
+...     split(col("Competence"), r"\s*(-)\s*")
+... )
+>>> 
+>>> ###---------------------------------------------------------------------------------#######""
+>>> #------------------------------------------------------------------------------------#
+>>> # Creation de la premiere dataset qui contient toutes les données 
+>>> 
+>>> df_clean = df_competence.drop("Competence")
+>>> 
+>>> 
+>>> ###---------------------------------------------------------------------------------#######""
+>>> #------------------------------------------------------------------------------------#
+>>> # Creation du deuxieme dataset pour le machine learning
+>>> 
+>>> #df_ml =
+>>> 
+>>> df_clean.show(5, truncate=False)
+[Stage 22:>                                                       (0 + 12) / 19][Stage 22:==============>                                         (5 + 12) / 19][Stage 22:===================================>                    (12 + 7) / 19][Stage 22:======================================>                 (13 + 6) / 19][Stage 22:=====================================================>  (18 + 1) / 19]                                                                                +----------------+-----------------------------------------------------+-------------------+-----------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------+----------------------+-----------------------------------------------------------------+-----------------------------------------+--------------------------------------------------------------------------------------------------------+
+|entreprise      |poste                                                |date_de_publication|formation_clean                                                                                                              |niveau_etude_clean                                                     |contract              |region_clean                                                     |experience                               |competences                                                                                             |
++----------------+-----------------------------------------------------+-------------------+-----------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------+----------------------+-----------------------------------------------------------------+-----------------------------------------+--------------------------------------------------------------------------------------------------------+
+|INTRA INTERIM SN|Ouvrier d’Usine - Roumanie (Europe)                  |20.06.2025         |Niveau d’anglais intermédiaire requis                                                                                        |[Qualification avant bac, Bac, Bac+1, Bac+2, Bac+3, Bac+4, Bac+5, plus]|[CDI, Intérim]        |International                                                    |[Etudiant, jeune diplômé et plus]        |[Accompagnement, Assemblage, Emballage, Maintenance, Production, Qualité, Sécurité]                     |
+|CABINET CARREE  |Responsable Administratif et Financier Senior - Dakar|01.07.2025         |Formation supérieure en finance, comptabilité, gestion (Bac +5 minimum – type Master CCA, DSCG, MBF, école de commerce, etc.)|[Bac+5, plus]                                                          |[CDI]                 |Dakar                                                            |[Expérience entre 5 ans et 10 ans]       |[Comptabilité, Comptabilité Générale, États Financiers, Finance, Financement, Gestion, IFRS, Trésorerie]|
+|ONE TO ONE      |Expert SEO Confirmé (H/F)  - Télétravail             |07.07.2025         |Minimum 3 ans d’expérience prouvée en SEO (idéalement en agence ou en freelance multi-clients)                               |[Bac+2, Bac+3, Bac+4, Bac+5, plus]                                     |[CDI, Freelance]      |International                                                    |[Expérience entre 2 ans et 5 ans et plus]|[Netlinking, Positionnement, Référencement Naturel, Référencement SEO, SEO]                             |
+|TALIACOM        |Graphiste - Dakar                                    |01.08.2025         |Vous acquérez votre licence Kuik.fr à un tarif préférentiel                                                                  |[Bac+2, Bac+3, Bac+4, Bac+5, plus]                                     |[Stage, Freelance]    |Dakar - Thiès & International                                    |[Expérience entre 2 ans et 5 ans et plus]|[CMS]                                                                                                   |
+|AFRICASHORE     |Cloud System Integrator (M/F)                        |04.06.2025         |Bachelors degree in Cloud Computing or related.                                                                              |[Bac+3]                                                                |[CDI, CDD - Freelance]|Dakar - Diourbel - Fatick - Kaffrine - Kaolack - Kédougou - Kolda|[Expérience entre 5 ans et 10 ans]       |[AGILE, CVS]                                                                                            |
++----------------+-----------------------------------------------------+-------------------+-----------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------+----------------------+-----------------------------------------------------------------+-----------------------------------------+--------------------------------------------------------------------------------------------------------+
+only showing top 5 rows
+
+>>> [K>>> [K>>> [K>>> [K>>> df_clean.show(5)
+[Stage 25:>                                                       (0 + 12) / 19][Stage 25:=====>                                                  (2 + 12) / 19][Stage 25:========>                                               (3 + 12) / 19][Stage 25:===================================>                    (12 + 7) / 19][Stage 25:======================================>                 (13 + 6) / 19][Stage 25:=========================================>              (14 + 5) / 19][Stage 25:============================================>           (15 + 4) / 19]                                                                                +----------------+--------------------+-------------------+--------------------+--------------------+--------------------+--------------------+--------------------+--------------------+
+|      entreprise|               poste|date_de_publication|     formation_clean|  niveau_etude_clean|            contract|        region_clean|          experience|         competences|
++----------------+--------------------+-------------------+--------------------+--------------------+--------------------+--------------------+--------------------+--------------------+
+|INTRA INTERIM SN|Ouvrier d’Usine -...|         20.06.2025|Niveau d’anglais ...|[Qualification av...|      [CDI, Intérim]|       International|[Etudiant, jeune ...|[Accompagnement, ...|
+|  CABINET CARREE|Responsable Admin...|         01.07.2025|Formation supérie...|       [Bac+5, plus]|               [CDI]|               Dakar|[Expérience entre...|[Comptabilité, Co...|
+|      ONE TO ONE|Expert SEO Confir...|         07.07.2025|Minimum 3 ans d’e...|[Bac+2, Bac+3, Ba...|    [CDI, Freelance]|       International|[Expérience entre...|[Netlinking, Posi...|
+|        TALIACOM|   Graphiste - Dakar|         01.08.2025|Vous acquérez vot...|[Bac+2, Bac+3, Ba...|  [Stage, Freelance]|Dakar - Thiès & I...|[Expérience entre...|               [CMS]|
+|     AFRICASHORE|Cloud System Inte...|         04.06.2025|Bachelors degree ...|             [Bac+3]|[CDI, CDD - Freel...|Dakar - Diourbel ...|[Expérience entre...|        [AGILE, CVS]|
++----------------+--------------------+-------------------+--------------------+--------------------+--------------------+--------------------+--------------------+--------------------+
+only showing top 5 rows
+
+>>> [K>>> [K>>> [K>>> [K>>> from pyspark.sql.functions import explode, col
+>>> 
+>>> df_comp = df.select("entreprise", "poste", explode(col("competences")).alias("competence"))
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/opt/spark/python/pyspark/sql/dataframe.py", line 3229, in select
+    jdf = self._jdf.select(self._jcols(*cols))
+  File "/opt/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+  File "/opt/spark/python/pyspark/errors/exceptions/captured.py", line 185, in deco
+    raise converted from None
+pyspark.errors.exceptions.captured.AnalysisException: [UNRESOLVED_COLUMN.WITH_SUGGESTION] A column or function parameter with name `competences` cannot be resolved. Did you mean one of the following? [`Competence`, `poste`, `entreprise`, `formation`, `region`].;
+'Project [entreprise#0, poste#1, explode('competences) AS competence#302]
++- Deduplicate [niveau_experience#3, formation#8, date_de_publication#7, poste#1, entreprise#0, Competence#6, contrat_propose#4, region#5, niveau_etude#2]
+   +- Relation [entreprise#0,poste#1,niveau_etude#2,niveau_experience#3,contrat_propose#4,region#5,Competence#6,date_de_publication#7,formation#8] parquet
+
+>>> df_comp.d[Kshow[Kw(5)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+NameError: name 'df_comp' is not defined
+>>> df_comp.show(5) = df.select("entreprise", "poste", explode(col("competences")).alias("competence"))[C[C[C[C[45Pfrom pyspark.sql.functions import explode, col[K[K[K[K[K
+>>> explode 
+<function explode at 0x7fdb80132320>
+>>> col 
+<function col at 0x7fdb8024ef80>
+>>> col [4@explode[C[C[C[C[Cfrom pyspark.sql.functions import explode[C[C[C[C[26Pdf_comp.show(5) = df.select("entreprise", "poste", explode(col("competences")).alias("competence"))[C[C[C[C[C[1P")).alias("competence"))[1P")).alias("competence"))[1P")).alias("competence"))[1P")).alias("competence"))[1P")).alias("competence"))[1P")).alias("competence"))[1P")).alias("competence"))[1P")).alias("competence"))[1P")).alias("competence"))[1P")).alias("competence"))[1P")).alias("competence"))C")).alias("competence"))o")).alias("competence"))m")).alias("competence"))p")).alias("competence"))e")).alias("competence"))t")).alias("competence"))e")).alias("competence"))n")).alias("competence"))c")).alias("competence"))e")).alias("competence"))[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/opt/spark/python/pyspark/sql/dataframe.py", line 3229, in select
+    jdf = self._jdf.select(self._jcols(*cols))
+  File "/opt/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+  File "/opt/spark/python/pyspark/errors/exceptions/captured.py", line 185, in deco
+    raise converted from None
+pyspark.errors.exceptions.captured.AnalysisException: [DATATYPE_MISMATCH.UNEXPECTED_INPUT_TYPE] Cannot resolve "explode(Competence)" due to data type mismatch: Parameter 1 requires the ("ARRAY" or "MAP") type, however "Competence" has the type "STRING".;
+'Project [entreprise#0, poste#1, explode(Competence#6) AS competence#303]
++- Deduplicate [niveau_experience#3, formation#8, date_de_publication#7, poste#1, entreprise#0, Competence#6, contrat_propose#4, region#5, niveau_etude#2]
+   +- Relation [entreprise#0,poste#1,niveau_etude#2,niveau_experience#3,contrat_propose#4,region#5,Competence#6,date_de_publication#7,formation#8] parquet
+
+>>> df_comp = df.select("entreprise", "poste", explode(col("Competence")).alias("competence"))[C[K[1P)[1P)[1P)[1P)[1P)[1P)[1P)[1P)[1P)[1P)[1P)[1P)[1P)[1P)[1P)[1P)[1P)[1P)[1P)[C
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/opt/spark/python/pyspark/sql/dataframe.py", line 3229, in select
+    jdf = self._jdf.select(self._jcols(*cols))
+  File "/opt/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+  File "/opt/spark/python/pyspark/errors/exceptions/captured.py", line 185, in deco
+    raise converted from None
+pyspark.errors.exceptions.captured.AnalysisException: [DATATYPE_MISMATCH.UNEXPECTED_INPUT_TYPE] Cannot resolve "explode(Competence)" due to data type mismatch: Parameter 1 requires the ("ARRAY" or "MAP") type, however "Competence" has the type "STRING".;
+'Project [entreprise#0, poste#1, explode(Competence#6) AS ()]
++- Deduplicate [niveau_experience#3, formation#8, date_de_publication#7, poste#1, entreprise#0, Competence#6, contrat_propose#4, region#5, niveau_etude#2]
+   +- Relation [entreprise#0,poste#1,niveau_etude#2,niveau_experience#3,contrat_propose#4,region#5,Competence#6,date_de_publication#7,formation#8] parquet
+
+>>> df_comp = df.select("entreprise", "poste", explode(col("Competence")))[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[Kdf.select("entreprise", "poste", explode(col("Competence")).alias("competence"))[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[Kdf.printSchema()
+root
+ |-- entreprise: string (nullable = true)
+ |-- poste: string (nullable = true)
+ |-- niveau_etude: string (nullable = true)
+ |-- niveau_experience: string (nullable = true)
+ |-- contrat_propose: string (nullable = true)
+ |-- region: string (nullable = true)
+ |-- Competence: string (nullable = true)
+ |-- date_de_publication: string (nullable = true)
+ |-- formation: string (nullable = true)
+
+>>> df.show()5)[C
+[Stage 28:>                                                       (0 + 12) / 19][Stage 28:=================>                                      (6 + 12) / 19][Stage 28:===================================>                    (12 + 7) / 19][Stage 28:======================================>                 (13 + 6) / 19]                                                                                +----------------+--------------------+--------------------+--------------------+--------------------+--------------------+--------------------+-------------------+--------------------+
+|      entreprise|               poste|        niveau_etude|   niveau_experience|     contrat_propose|              region|          Competence|date_de_publication|           formation|
++----------------+--------------------+--------------------+--------------------+--------------------+--------------------+--------------------+-------------------+--------------------+
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Qualification ava...|Etudiant, jeune d...|       CDI & Intérim|       International|Accompagnement - ...|         20.06.2025|<li data-end="963...|
+|  CABINET CARREE|Responsable Admin...|       Bac+5 et plus|Expérience entre ...|                 CDI|               Dakar|Comptabilité - Co...|         01.07.2025|<li>Formation sup...|
+|      ONE TO ONE|Expert SEO Confir...|Bac+2, Bac+3, Bac...|Expérience entre ...|     CDI & Freelance|       International|Netlinking - Posi...|         07.07.2025|<li data-end="197...|
+|        TALIACOM|   Graphiste - Dakar|Bac+2, Bac+3, Bac...|Expérience entre ...|   Stage & Freelance|Dakar - Thiès & I...|                 CMS|         01.08.2025|<li>Vous <strong>...|
+|     AFRICASHORE|Cloud System Inte...|               Bac+3|Expérience entre ...|CDI, CDD - Freelance|Dakar - Diourbel ...|         AGILE - CVS|         04.06.2025|<li><strong>Bache...|
++----------------+--------------------+--------------------+--------------------+--------------------+--------------------+--------------------+-------------------+--------------------+
+only showing top 5 rows
+
+>>> df.show(5)printSchema()[C[C[C[C[C[C[6P_comp = df.select("entreprise", "poste", explode(col("Competence")).alias("competence"))[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[Kdf.wu[KithColumn(
+... "Compt[Ket",
+... explode(col(from pyspark.sql.functions import explode, col
+  File "<stdin>", line 3
+    explode(col(from pyspark.sql.functions import explode, col
+                ^^^^
+SyntaxError: invalid syntax
+>>> 
+>>> df_comp = df.select("entreprise", "poste", explode(col("competences")).alias("competence"))
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/opt/spark/python/pyspark/sql/dataframe.py", line 3229, in select
+    jdf = self._jdf.select(self._jcols(*cols))
+  File "/opt/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+  File "/opt/spark/python/pyspark/errors/exceptions/captured.py", line 185, in deco
+    raise converted from None
+pyspark.errors.exceptions.captured.AnalysisException: [UNRESOLVED_COLUMN.WITH_SUGGESTION] A column or function parameter with name `competences` cannot be resolved. Did you mean one of the following? [`Competence`, `poste`, `entreprise`, `formation`, `region`].;
+'Project [entreprise#0, poste#1, explode('competences) AS competence#341]
++- Deduplicate [niveau_experience#3, formation#8, date_de_publication#7, poste#1, entreprise#0, Competence#6, contrat_propose#4, region#5, niveau_etude#2]
+   +- Relation [entreprise#0,poste#1,niveau_etude#2,niveau_experience#3,contrat_propose#4,region#5,Competence#6,date_de_publication#7,formation#8] parquet
+
+>>> df_comp = df.select("entreprise", "poste", explode(col("competences")).alias("competence"))[C[C[C[C[33Pexplode(col(from pyspark.sql.functions import explode, col[C[C[C[C"Compet",[K[C[C[C[Cdf_comp = df.withColumn(
+... df_comp = df.withColumn(select("entreprise", "poste", explode(col("competences")).alias("competence"))[C[C[C[C[33Pexplode(col(from pyspark.sql.functions import explode, col[C[C[C[C"Compet",[K
+... "Compet",[C[C[C[Cdf_comp = df.withColumn(select("entreprise", "poste", explode(col("competences")).alias("competence"))[C[C[C[C[33Pexplode(col(from pyspark.sql.functions import explode, col[C[C[C[C"Compet",[K[C[C[C[Cdf_comp = df.withColumn([C[C[C[C[C[C[14P.show(5)printSchema()[C[C[C[C[C[C[6P_comp = df.select("entreprise", "poste", explode(col("Competence")).alias("competence"))[C[C[C[Ccol [K[4@explode[C[C[C[C[Cfrom pyspark.sql.functions import explode[C[C[C[C[26Pdf_comp.show(5) = df.select("entreprise", "poste", explode(col("competences")).alias("competence"))[C[C[C[C[C[C[C[C[C[C[C.show(5)[K[C[C[C[Cfrom pyspark.sql.functions import explode[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[Kexplode(col("Compr[Ketence"))
+... )
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/opt/spark/python/pyspark/sql/dataframe.py", line 5176, in withColumn
+    return DataFrame(self._jdf.withColumn(colName, col._jc), self.sparkSession)
+  File "/opt/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+  File "/opt/spark/python/pyspark/errors/exceptions/captured.py", line 185, in deco
+    raise converted from None
+pyspark.errors.exceptions.captured.AnalysisException: [DATATYPE_MISMATCH.UNEXPECTED_INPUT_TYPE] Cannot resolve "explode(Competence)" due to data type mismatch: Parameter 1 requires the ("ARRAY" or "MAP") type, however "Competence" has the type "STRING".;
+'Project [entreprise#0, poste#1, niveau_etude#2, niveau_experience#3, contrat_propose#4, region#5, Competence#6, date_de_publication#7, formation#8, explode(Competence#6) AS Compet#342]
++- Deduplicate [niveau_experience#3, formation#8, date_de_publication#7, poste#1, entreprise#0, Competence#6, contrat_propose#4, region#5, niveau_etude#2]
+   +- Relation [entreprise#0,poste#1,niveau_etude#2,niveau_experience#3,contrat_propose#4,region#5,Competence#6,date_de_publication#7,formation#8] parquet
+
+>>> from pyspark.sql.functions import explode, col
+>>> 
+>>> df_comp = df.select("entreprise", "poste", explode(col("Competence")).alias("competence"))
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/opt/spark/python/pyspark/sql/dataframe.py", line 3229, in select
+    jdf = self._jdf.select(self._jcols(*cols))
+  File "/opt/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+  File "/opt/spark/python/pyspark/errors/exceptions/captured.py", line 185, in deco
+    raise converted from None
+pyspark.errors.exceptions.captured.AnalysisException: [DATATYPE_MISMATCH.UNEXPECTED_INPUT_TYPE] Cannot resolve "explode(Competence)" due to data type mismatch: Parameter 1 requires the ("ARRAY" or "MAP") type, however "Competence" has the type "STRING".;
+'Project [entreprise#0, poste#1, explode(Competence#6) AS competence#343]
++- Deduplicate [niveau_experience#3, formation#8, date_de_publication#7, poste#1, entreprise#0, Competence#6, contrat_propose#4, region#5, niveau_etude#2]
+   +- Relation [entreprise#0,poste#1,niveau_etude#2,niveau_experience#3,contrat_propose#4,region#5,Competence#6,date_de_publication#7,formation#8] parquet
+
+>>> df_comp = df.select("entreprise", "poste", explode(col("Competence")).alias("competence"))[C
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/opt/spark/python/pyspark/sql/dataframe.py", line 3229, in select
+    jdf = self._jdf.select(self._jcols(*cols))
+  File "/opt/spark/python/lib/py4j-0.10.9.7-src.zip/py4j/java_gateway.py", line 1322, in __call__
+  File "/opt/spark/python/pyspark/errors/exceptions/captured.py", line 185, in deco
+    raise converted from None
+pyspark.errors.exceptions.captured.AnalysisException: [DATATYPE_MISMATCH.UNEXPECTED_INPUT_TYPE] Cannot resolve "explode(Competence)" due to data type mismatch: Parameter 1 requires the ("ARRAY" or "MAP") type, however "Competence" has the type "STRING".;
+'Project [entreprise#0, poste#1, explode(Competence#6) AS competence#344]
++- Deduplicate [niveau_experience#3, formation#8, date_de_publication#7, poste#1, entreprise#0, Competence#6, contrat_propose#4, region#5, niveau_etude#2]
+   +- Relation [entreprise#0,poste#1,niveau_etude#2,niveau_experience#3,contrat_propose#4,region#5,Competence#6,date_de_publication#7,formation#8] parquet
+
+>>> df_clean.ci[Kolumns
+['entreprise', 'poste', 'date_de_publication', 'formation_clean', 'niveau_etude_clean', 'contract', 'region_clean', 'experience', 'competences']
+>>> df_clean.columns[K[K[K[K[K[K[Kdescru[Kibe()
+DataFrame[summary: string, entreprise: string, poste: string, date_de_publication: string, formation_clean: string, region_clean: string]
+>>> df_clean.describe()[3Pcolumnsdescribe()[K[K[K[K[K[K[K[K[K[KprintSchema()
+root
+ |-- entreprise: string (nullable = true)
+ |-- poste: string (nullable = true)
+ |-- date_de_publication: string (nullable = true)
+ |-- formation_clean: string (nullable = true)
+ |-- niveau_etude_clean: array (nullable = true)
+ |    |-- element: string (containsNull = false)
+ |-- contract: array (nullable = true)
+ |    |-- element: string (containsNull = false)
+ |-- region_clean: string (nullable = true)
+ |-- experience: array (nullable = true)
+ |    |-- element: string (containsNull = false)
+ |-- competences: array (nullable = true)
+ |    |-- element: string (containsNull = false)
+
+>>> df_clean.printSchema()[3Pdescribe()[3Pcolumns[C[C[C[C[C[C[C[Comp = df.select("entreprise", "poste", explode(col("Competence")).alias("competence"))[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[1P")).alias("competence"))[1P")).alias("competence"))[1P")).alias("competence"))[1P")).alias("competence"))[1P")).alias("competence"))[1P")).alias("competence"))[1P")).alias("competence"))[1P")).alias("competence"))[1P")).alias("competence"))[1P")).alias("competence"))c")).alias("competence"))o")).alias("competence"))m")).alias("competence"))p")).alias("competence"))e")).alias("competence"))t")).alias("competence"))e")).alias("competence"))n")).alias("competence"))c")).alias("competence"))e")).alias("competence"))s")).alias("competence"))[1@_[1@c[1@l[1@e[1@a[1@n[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C
+>>> df_comp.show(10)
+[Stage 31:>                                                       (0 + 12) / 19][Stage 31:===========>                                            (4 + 12) / 19][Stage 31:===================================>                    (12 + 7) / 19][Stage 31:======================================>                 (13 + 6) / 19]                                                                                +----------------+--------------------+--------------------+
+|      entreprise|               poste|          competence|
++----------------+--------------------+--------------------+
+|INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|
+|  CABINET CARREE|Responsable Admin...|        Comptabilité|
+|  CABINET CARREE|Responsable Admin...|Comptabilité Géné...|
+|  CABINET CARREE|Responsable Admin...|    États Financiers|
++----------------+--------------------+--------------------+
+only showing top 10 rows
+
+>>> df_comp.show(10) = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence")),) )e)x)p)l)o)de()[C[K[K[K[K[K[K[K[K[K[K[K ,[K[K,
+... explode(col(form[K[K[K[K"formationè[K_clean"[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K"formation"[K[K[K[K[K[K[K[K[K[K[Kcol("formation_clena[K[Kan").alias("formation"))
+>>> df_comp.show(10)
+[Stage 34:>                                                       (0 + 12) / 19][Stage 34:=====>                                                  (2 + 12) / 19][Stage 34:==========================>                             (9 + 10) / 19][Stage 34:===================================>                    (12 + 7) / 19][Stage 34:======================================>                 (13 + 6) / 19]                                                                                +----------------+--------------------+--------------------+--------------------+
+|      entreprise|               poste|          competence|           formation|
++----------------+--------------------+--------------------+--------------------+
+|INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|
+|  CABINET CARREE|Responsable Admin...|        Comptabilité|Formation supérie...|
+|  CABINET CARREE|Responsable Admin...|Comptabilité Géné...|Formation supérie...|
+|  CABINET CARREE|Responsable Admin...|    États Financiers|Formation supérie...|
++----------------+--------------------+--------------------+--------------------+
+only showing top 10 rows
+
+>>> df_comp.show(10)[C[C[C[Ccol("formation_clean").alias("formation"))[C[C[C[Cdf_comp = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"),[C[C[C[C[C[C[C[C[C[C[C.show(10)[K = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"))[C[C[C[C[C[C[C[Clean.printSchema()[K
+root
+ |-- entreprise: string (nullable = true)
+ |-- poste: string (nullable = true)
+ |-- date_de_publication: string (nullable = true)
+ |-- formation_clean: string (nullable = true)
+ |-- niveau_etude_clean: array (nullable = true)
+ |    |-- element: string (containsNull = false)
+ |-- contract: array (nullable = true)
+ |    |-- element: string (containsNull = false)
+ |-- region_clean: string (nullable = true)
+ |-- experience: array (nullable = true)
+ |    |-- element: string (containsNull = false)
+ |-- competences: array (nullable = true)
+ |    |-- element: string (containsNull = false)
+
+>>> df_clean.printSchema()[C[C[C[C[C[C[C[C[6Pomp.show(10)[C[C[C[Ccol("formation_clean").alias("formation"))[C[C[C[Cdf_comp = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"),[C[C[C[C[C[C[C[C[C[C[C.show(10)[K = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"),[C[C[C[C[55Pcol("formation_clean").alias("formation"))[C[C[C[C[26Pdf_comp.show(10)[C[C[C[C[C[C[C[Clean.printSchema()[C[C[C[C[Kdf_clean.printSchema()[C[C[C[C[C[C[C[C[6Pomp.show(10)[C[C[C[Ccol("formation_clean").alias("formation"))[C[C[C[Cdf_comp = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"),[C[C[C[C[C[C[C[C[C[C[C.show(10)[K = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"))[C[C[C[C[C[C[C[Clean.printSchema()[K[3Pdescribe()[3Pcolumns[C[C[C[C[C[C[C[Comp = df.select("entreprise", "poste", explode(col("Competence")).alias("competence"))[C[C[C[C[C[C[C[Clean.columns[Kdescribe()printSchema()[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[Kdf_clean.describe()[3Pcolumns[C[C[C[C[C[C[C[Comp = df.select("entreprise", "poste", explode(col("Competence")).alias("competence"))[C[C[C[C[44Pfrom pyspark.sql.functions import explode, col[C[C[C[C)[Kfrom pyspark.sql.functions import explode, col[C[C[C[C)[Kexplode(col("Competence"))[C[C[C[C[17P"Compet",[C[C[C[Cdf_comp = df.withColumn([C[C[C[C[15P"Compet",[C[C[C[Cexplode(col("Competence"))[C[C[C[C)[Kfrom pyspark.sql.functions import explode, col[C[C[C[Cdf_comp = df.select("entreprise", "poste", explode(col("Competence")).alias("competence"))[C[C[C[C[C[C[C[Clean.columns[Kdescribe()[C[C[C[C[Kdf_comp = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"))[C[C[C[C[C[C[C[C[C[C[C.show(10)[K = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"),
+... df_comp = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"),[C[C[C[C[C[C[C[Clean.printSchema()[K[C[C[C[C[C[C[C[C[6Pomp.show(10)[C[C[C[Ccol("formation_clean").alias("formation"))[K, [K explode(col("niveau_etude_clean")).alisa[K[Kas("niveau_etude")
+... )
+>>> )col("formation_clean").alias("formation"), explode(col("niveau_etude_clean")).alias("niveau_etude")[C[C[C[C[2Pdf_comp = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"),[C[C[C[C[C[C[C[Clean.printSchema()[K[C[C[C[C[C[C[C[C[6Pomp.show(10)
+[Stage 37:>                                                       (0 + 12) / 19][Stage 37:=================>                                      (6 + 12) / 19][Stage 37:===================================>                    (12 + 7) / 19][Stage 37:======================================>                 (13 + 6) / 19]                                                                                +----------------+--------------------+--------------+--------------------+--------------------+
+|      entreprise|               poste|    competence|           formation|        niveau_etude|
++----------------+--------------------+--------------+--------------------+--------------------+
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|Qualification ava...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                 Bac|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+1|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+2|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+3|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+4|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+5|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                plus|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|Qualification ava...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|                 Bac|
++----------------+--------------------+--------------+--------------------+--------------------+
+only showing top 10 rows
+
+>>> df_comp.show(10)[C[C[C[C)[Kcol("formation_clean").alias("formation"), explode(col("niveau_etude_clean")).alias("niveau_etude")[C[C[C[C[2Pdf_comp = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"),[C[C[C[C[C[C[C[Clean.printSchema()[K[C[C[C[C[C[C[C[Comp = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"),
+... df_comp = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"),[C[C[C[C[C[C[C[C[C[C[C.show(10)[K[C[C[C[C)[Kcol("formation_clean").alias("formation"), explode(col("niveau_etude_clean")).alias("niveau_etude"),
+... explode(col("contract")).alo[Kias(contrat[K[K[K[K[K[K[K"conte[Krat"), [K explode(col('[K"experia[Kence"))
+... )
+>>> )explode(col("contract")).alias("contrat"), explode(col("experience"))[C[C[C[Ccol("formation_clean").alias("formation"), explode(col("niveau_etude_clean")).alias("niveau_etude"),[C[C[C[C[3Pdf_comp = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"),[C[C[C[C[C[C[C[C[C[C[C.show(10)[K
+[Stage 40:>                                                       (0 + 12) / 19][Stage 40:=====>                                                  (2 + 13) / 19][Stage 40:==========================>                             (9 + 10) / 19][Stage 40:================================>                       (11 + 8) / 19][Stage 40:===================================>                    (12 + 7) / 19][Stage 40:======================================>                 (13 + 6) / 19]                                                                                +----------------+--------------------+--------------+--------------------+--------------------+-------+--------------------+
+|      entreprise|               poste|    competence|           formation|        niveau_etude|contrat|                 col|
++----------------+--------------------+--------------+--------------------+--------------------+-------+--------------------+
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|Qualification ava...|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|Qualification ava...|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|Qualification ava...|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|Qualification ava...|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                 Bac|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                 Bac|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                 Bac|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                 Bac|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+1|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+1|    CDI|jeune diplômé et ...|
++----------------+--------------------+--------------+--------------------+--------------------+-------+--------------------+
+only showing top 10 rows
+
+>>> df_comp.show(10)[C[C[C[C)[Kexplode(col("contract")).alias("contrat"), explode(col("experience"))[C[C[C[Ccol("formation_clean").alias("formation"), explode(col("niveau_etude_clean")).alias("niveau_etude"),[C[C[C[C[3Pdf_comp = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"),[C[C[C[C[C[C[C[C[C[C[C.show(10)[K[C[C[C[C)[Kdf_comp.show(10) = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"),
+... df_comp = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"),[C[C[C[C[C[C[C[C[C[C[C.show(10)[K[C[C[C[C)[Kexplode(col("contract")).alias("contrat"), explode(col("experience"))[C[C[C[Ccol("formation_clean").alias("formation"), explode(col("niveau_etude_clean")).alias("niveau_etude"),
+... col("formation_clean").alias("formation"), explode(col("niveau_etude_clean")).alias("niveau_etude"),[C[C[C[C[C[3Pdf_comp = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"),[C[C[C[C[C[C[C[C[C[C[C.show(10)[K[C[C[C[C)[Kdf_comp.show(10) = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"),[C[C[C[Ccol("formation_clean").alias("formation"), explode(col("niveau_etude_clean")).alias("niveau_etude"),[C[C[C[C[Kcol("formation_clean").alias("formation"), explode(col("niveau_etude_clean")).alias("niveau_etude"),[C[C[C[C[3Pdf_comp = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"),[C[C[C[C[C[C[C[C[C[C[C.show(10)[K[C[C[C[C)[Kexplode(col("contract")).alias("contrat"), explode(col("experience")).alias("experience"),[K
+... )
+>>> )explode(col("contract")).alias("contrat"), explode(col("experience")).alias("experience")[C[C[C[Ccol("formation_clean").alias("formation"), explode(col("niveau_etude_clean")).alias("niveau_etude"),[C[C[C[C[3Pdf_comp = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"),[C[C[C[C[C[C[C[C[C[C[C.show(10)[K
+[Stage 43:>                                                       (0 + 12) / 19][Stage 43:===========>                                            (4 + 13) / 19][Stage 43:=============================>                          (10 + 9) / 19][Stage 43:================================>                       (11 + 8) / 19][Stage 43:===================================>                    (12 + 7) / 19][Stage 43:======================================>                 (13 + 6) / 19][Stage 43:=========================================>              (14 + 5) / 19]                                                                                +----------------+--------------------+--------------+--------------------+--------------------+-------+--------------------+
+|      entreprise|               poste|    competence|           formation|        niveau_etude|contrat|          experience|
++----------------+--------------------+--------------+--------------------+--------------------+-------+--------------------+
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|Qualification ava...|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|Qualification ava...|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|Qualification ava...|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|Qualification ava...|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                 Bac|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                 Bac|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                 Bac|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                 Bac|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+1|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+1|    CDI|jeune diplômé et ...|
++----------------+--------------------+--------------+--------------------+--------------------+-------+--------------------+
+only showing top 10 rows
+
+>>> df_comp.show(10)[C[C[C[C)[Kdf_comp.show(10)[1P)[1P)1)0)0)
+[Stage 46:>                                                       (0 + 12) / 19][Stage 46:=============================>                          (10 + 9) / 19][Stage 46:================================>                       (11 + 8) / 19][Stage 46:===================================>                    (12 + 7) / 19][Stage 46:======================================>                 (13 + 6) / 19]                                                                                +----------------+--------------------+--------------+--------------------+--------------------+-------+--------------------+
+|      entreprise|               poste|    competence|           formation|        niveau_etude|contrat|          experience|
++----------------+--------------------+--------------+--------------------+--------------------+-------+--------------------+
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|Qualification ava...|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|Qualification ava...|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|Qualification ava...|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|Qualification ava...|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                 Bac|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                 Bac|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                 Bac|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                 Bac|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+1|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+1|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+1|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+1|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+2|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+2|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+2|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+2|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+3|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+3|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+3|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+3|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+4|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+4|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+4|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+4|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+5|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+5|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+5|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+5|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                plus|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                plus|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                plus|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                plus|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|Qualification ava...|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|Qualification ava...|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|Qualification ava...|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|Qualification ava...|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|                 Bac|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|                 Bac|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|                 Bac|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|                 Bac|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|               Bac+1|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|               Bac+1|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|               Bac+1|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|               Bac+1|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|               Bac+2|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|               Bac+2|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|               Bac+2|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|               Bac+2|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|               Bac+3|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|               Bac+3|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|               Bac+3|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|               Bac+3|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|               Bac+4|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|               Bac+4|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|               Bac+4|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|               Bac+4|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|               Bac+5|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|               Bac+5|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|               Bac+5|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|               Bac+5|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|                plus|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|                plus|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|                plus|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|    Assemblage|Niveau d’anglais ...|                plus|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|Qualification ava...|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|Qualification ava...|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|Qualification ava...|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|Qualification ava...|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|                 Bac|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|                 Bac|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|                 Bac|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|                 Bac|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|               Bac+1|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|               Bac+1|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|               Bac+1|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|               Bac+1|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|               Bac+2|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|               Bac+2|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|               Bac+2|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|               Bac+2|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|               Bac+3|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|               Bac+3|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|               Bac+3|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|               Bac+3|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|               Bac+4|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|               Bac+4|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|               Bac+4|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|               Bac+4|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|               Bac+5|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|               Bac+5|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|               Bac+5|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|               Bac+5|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|                plus|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|                plus|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|                plus|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|     Emballage|Niveau d’anglais ...|                plus|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|   Maintenance|Niveau d’anglais ...|Qualification ava...|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|   Maintenance|Niveau d’anglais ...|Qualification ava...|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|   Maintenance|Niveau d’anglais ...|Qualification ava...|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|   Maintenance|Niveau d’anglais ...|Qualification ava...|Intérim|jeune diplômé et ...|
++----------------+--------------------+--------------+--------------------+--------------------+-------+--------------------+
+only showing top 100 rows
+
+>>> df_comp.show(100)[C[1P)[1P)[1P)1)[1P)5)0)0)
+[Stage 49:>                                                       (0 + 12) / 19][Stage 49:==>                                                     (1 + 12) / 19][Stage 49:===========>                                            (4 + 12) / 19][Stage 49:================================>                       (11 + 8) / 19][Stage 49:===================================>                    (12 + 7) / 19][Stage 49:======================================>                 (13 + 6) / 19][Stage 49:=========================================>              (14 + 5) / 19]                                                                                +--------------------+--------------------+--------------------+--------------------+--------------------+---------------+--------------------+
+|          entreprise|               poste|          competence|           formation|        niveau_etude|        contrat|          experience|
++--------------------+--------------------+--------------------+--------------------+--------------------+---------------+--------------------+
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|Qualification ava...|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|Qualification ava...|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|Qualification ava...|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|Qualification ava...|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|                 Bac|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|                 Bac|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|                 Bac|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|                 Bac|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|               Bac+1|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|               Bac+1|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|               Bac+1|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|               Bac+1|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|               Bac+2|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|               Bac+2|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|               Bac+2|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|               Bac+2|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|               Bac+3|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|               Bac+3|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|               Bac+3|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|               Bac+3|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|               Bac+4|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|               Bac+4|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|               Bac+4|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|               Bac+4|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|               Bac+5|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|               Bac+5|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|               Bac+5|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|               Bac+5|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|                plus|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|                plus|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|                plus|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|      Accompagnement|Niveau d’anglais ...|                plus|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|Qualification ava...|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|Qualification ava...|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|Qualification ava...|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|Qualification ava...|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|                 Bac|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|                 Bac|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|                 Bac|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|                 Bac|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|               Bac+1|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|               Bac+1|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|               Bac+1|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|               Bac+1|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|               Bac+2|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|               Bac+2|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|               Bac+2|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|               Bac+2|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|               Bac+3|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|               Bac+3|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|               Bac+3|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|               Bac+3|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|               Bac+4|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|               Bac+4|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|               Bac+4|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|               Bac+4|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|               Bac+5|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|               Bac+5|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|               Bac+5|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|               Bac+5|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|                plus|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|                plus|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|                plus|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Assemblage|Niveau d’anglais ...|                plus|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|Qualification ava...|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|Qualification ava...|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|Qualification ava...|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|Qualification ava...|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|                 Bac|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|                 Bac|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|                 Bac|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|                 Bac|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|               Bac+1|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|               Bac+1|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|               Bac+1|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|               Bac+1|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|               Bac+2|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|               Bac+2|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|               Bac+2|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|               Bac+2|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|               Bac+3|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|               Bac+3|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|               Bac+3|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|               Bac+3|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|               Bac+4|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|               Bac+4|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|               Bac+4|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|               Bac+4|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|               Bac+5|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|               Bac+5|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|               Bac+5|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|               Bac+5|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|                plus|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|                plus|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|                plus|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|           Emballage|Niveau d’anglais ...|                plus|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|Qualification ava...|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|Qualification ava...|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|Qualification ava...|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|Qualification ava...|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|                 Bac|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|                 Bac|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|                 Bac|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|                 Bac|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|               Bac+1|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|               Bac+1|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|               Bac+1|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|               Bac+1|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|               Bac+2|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|               Bac+2|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|               Bac+2|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|               Bac+2|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|               Bac+3|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|               Bac+3|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|               Bac+3|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|               Bac+3|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|               Bac+4|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|               Bac+4|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|               Bac+4|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|               Bac+4|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|               Bac+5|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|               Bac+5|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|               Bac+5|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|               Bac+5|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|                plus|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|                plus|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|                plus|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|         Maintenance|Niveau d’anglais ...|                plus|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|Qualification ava...|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|Qualification ava...|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|Qualification ava...|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|Qualification ava...|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|                 Bac|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|                 Bac|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|                 Bac|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|                 Bac|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|               Bac+1|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|               Bac+1|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|               Bac+1|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|               Bac+1|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|               Bac+2|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|               Bac+2|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|               Bac+2|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|               Bac+2|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|               Bac+3|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|               Bac+3|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|               Bac+3|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|               Bac+3|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|               Bac+4|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|               Bac+4|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|               Bac+4|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|               Bac+4|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|               Bac+5|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|               Bac+5|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|               Bac+5|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|               Bac+5|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|                plus|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|                plus|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|                plus|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|          Production|Niveau d’anglais ...|                plus|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|Qualification ava...|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|Qualification ava...|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|Qualification ava...|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|Qualification ava...|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|                 Bac|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|                 Bac|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|                 Bac|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|                 Bac|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|               Bac+1|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|               Bac+1|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|               Bac+1|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|               Bac+1|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|               Bac+2|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|               Bac+2|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|               Bac+2|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|               Bac+2|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|               Bac+3|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|               Bac+3|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|               Bac+3|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|               Bac+3|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|               Bac+4|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|               Bac+4|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|               Bac+4|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|               Bac+4|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|               Bac+5|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|               Bac+5|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|               Bac+5|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|               Bac+5|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|                plus|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|                plus|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|                plus|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|             Qualité|Niveau d’anglais ...|                plus|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|Qualification ava...|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|Qualification ava...|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|Qualification ava...|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|Qualification ava...|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|                 Bac|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|                 Bac|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|                 Bac|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|                 Bac|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|               Bac+1|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|               Bac+1|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|               Bac+1|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|               Bac+1|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|               Bac+2|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|               Bac+2|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|               Bac+2|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|               Bac+2|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|               Bac+3|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|               Bac+3|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|               Bac+3|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|               Bac+3|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|               Bac+4|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|               Bac+4|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|               Bac+4|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|               Bac+4|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|               Bac+5|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|               Bac+5|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|               Bac+5|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|               Bac+5|        Intérim|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|                plus|            CDI|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|                plus|            CDI|jeune diplômé et ...|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|                plus|        Intérim|            Etudiant|
+|    INTRA INTERIM SN|Ouvrier d’Usine -...|            Sécurité|Niveau d’anglais ...|                plus|        Intérim|jeune diplômé et ...|
+|      CABINET CARREE|Responsable Admin...|        Comptabilité|Formation supérie...|               Bac+5|            CDI|Expérience entre ...|
+|      CABINET CARREE|Responsable Admin...|        Comptabilité|Formation supérie...|                plus|            CDI|Expérience entre ...|
+|      CABINET CARREE|Responsable Admin...|Comptabilité Géné...|Formation supérie...|               Bac+5|            CDI|Expérience entre ...|
+|      CABINET CARREE|Responsable Admin...|Comptabilité Géné...|Formation supérie...|                plus|            CDI|Expérience entre ...|
+|      CABINET CARREE|Responsable Admin...|    États Financiers|Formation supérie...|               Bac+5|            CDI|Expérience entre ...|
+|      CABINET CARREE|Responsable Admin...|    États Financiers|Formation supérie...|                plus|            CDI|Expérience entre ...|
+|      CABINET CARREE|Responsable Admin...|             Finance|Formation supérie...|               Bac+5|            CDI|Expérience entre ...|
+|      CABINET CARREE|Responsable Admin...|             Finance|Formation supérie...|                plus|            CDI|Expérience entre ...|
+|      CABINET CARREE|Responsable Admin...|         Financement|Formation supérie...|               Bac+5|            CDI|Expérience entre ...|
+|      CABINET CARREE|Responsable Admin...|         Financement|Formation supérie...|                plus|            CDI|Expérience entre ...|
+|      CABINET CARREE|Responsable Admin...|             Gestion|Formation supérie...|               Bac+5|            CDI|Expérience entre ...|
+|      CABINET CARREE|Responsable Admin...|             Gestion|Formation supérie...|                plus|            CDI|Expérience entre ...|
+|      CABINET CARREE|Responsable Admin...|                IFRS|Formation supérie...|               Bac+5|            CDI|Expérience entre ...|
+|      CABINET CARREE|Responsable Admin...|                IFRS|Formation supérie...|                plus|            CDI|Expérience entre ...|
+|      CABINET CARREE|Responsable Admin...|          Trésorerie|Formation supérie...|               Bac+5|            CDI|Expérience entre ...|
+|      CABINET CARREE|Responsable Admin...|          Trésorerie|Formation supérie...|                plus|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|          Netlinking|Minimum 3 ans d’e...|               Bac+2|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|          Netlinking|Minimum 3 ans d’e...|               Bac+2|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|          Netlinking|Minimum 3 ans d’e...|               Bac+3|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|          Netlinking|Minimum 3 ans d’e...|               Bac+3|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|          Netlinking|Minimum 3 ans d’e...|               Bac+4|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|          Netlinking|Minimum 3 ans d’e...|               Bac+4|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|          Netlinking|Minimum 3 ans d’e...|               Bac+5|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|          Netlinking|Minimum 3 ans d’e...|               Bac+5|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|          Netlinking|Minimum 3 ans d’e...|                plus|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|          Netlinking|Minimum 3 ans d’e...|                plus|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|      Positionnement|Minimum 3 ans d’e...|               Bac+2|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|      Positionnement|Minimum 3 ans d’e...|               Bac+2|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|      Positionnement|Minimum 3 ans d’e...|               Bac+3|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|      Positionnement|Minimum 3 ans d’e...|               Bac+3|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|      Positionnement|Minimum 3 ans d’e...|               Bac+4|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|      Positionnement|Minimum 3 ans d’e...|               Bac+4|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|      Positionnement|Minimum 3 ans d’e...|               Bac+5|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|      Positionnement|Minimum 3 ans d’e...|               Bac+5|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|      Positionnement|Minimum 3 ans d’e...|                plus|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|      Positionnement|Minimum 3 ans d’e...|                plus|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|Référencement Nat...|Minimum 3 ans d’e...|               Bac+2|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|Référencement Nat...|Minimum 3 ans d’e...|               Bac+2|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|Référencement Nat...|Minimum 3 ans d’e...|               Bac+3|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|Référencement Nat...|Minimum 3 ans d’e...|               Bac+3|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|Référencement Nat...|Minimum 3 ans d’e...|               Bac+4|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|Référencement Nat...|Minimum 3 ans d’e...|               Bac+4|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|Référencement Nat...|Minimum 3 ans d’e...|               Bac+5|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|Référencement Nat...|Minimum 3 ans d’e...|               Bac+5|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|Référencement Nat...|Minimum 3 ans d’e...|                plus|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|Référencement Nat...|Minimum 3 ans d’e...|                plus|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|   Référencement SEO|Minimum 3 ans d’e...|               Bac+2|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|   Référencement SEO|Minimum 3 ans d’e...|               Bac+2|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|   Référencement SEO|Minimum 3 ans d’e...|               Bac+3|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|   Référencement SEO|Minimum 3 ans d’e...|               Bac+3|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|   Référencement SEO|Minimum 3 ans d’e...|               Bac+4|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|   Référencement SEO|Minimum 3 ans d’e...|               Bac+4|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|   Référencement SEO|Minimum 3 ans d’e...|               Bac+5|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|   Référencement SEO|Minimum 3 ans d’e...|               Bac+5|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|   Référencement SEO|Minimum 3 ans d’e...|                plus|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|   Référencement SEO|Minimum 3 ans d’e...|                plus|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|                 SEO|Minimum 3 ans d’e...|               Bac+2|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|                 SEO|Minimum 3 ans d’e...|               Bac+2|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|                 SEO|Minimum 3 ans d’e...|               Bac+3|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|                 SEO|Minimum 3 ans d’e...|               Bac+3|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|                 SEO|Minimum 3 ans d’e...|               Bac+4|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|                 SEO|Minimum 3 ans d’e...|               Bac+4|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|                 SEO|Minimum 3 ans d’e...|               Bac+5|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|                 SEO|Minimum 3 ans d’e...|               Bac+5|      Freelance|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|                 SEO|Minimum 3 ans d’e...|                plus|            CDI|Expérience entre ...|
+|          ONE TO ONE|Expert SEO Confir...|                 SEO|Minimum 3 ans d’e...|                plus|      Freelance|Expérience entre ...|
+|            TALIACOM|   Graphiste - Dakar|                 CMS|Vous acquérez vot...|               Bac+2|          Stage|Expérience entre ...|
+|            TALIACOM|   Graphiste - Dakar|                 CMS|Vous acquérez vot...|               Bac+2|      Freelance|Expérience entre ...|
+|            TALIACOM|   Graphiste - Dakar|                 CMS|Vous acquérez vot...|               Bac+3|          Stage|Expérience entre ...|
+|            TALIACOM|   Graphiste - Dakar|                 CMS|Vous acquérez vot...|               Bac+3|      Freelance|Expérience entre ...|
+|            TALIACOM|   Graphiste - Dakar|                 CMS|Vous acquérez vot...|               Bac+4|          Stage|Expérience entre ...|
+|            TALIACOM|   Graphiste - Dakar|                 CMS|Vous acquérez vot...|               Bac+4|      Freelance|Expérience entre ...|
+|            TALIACOM|   Graphiste - Dakar|                 CMS|Vous acquérez vot...|               Bac+5|          Stage|Expérience entre ...|
+|            TALIACOM|   Graphiste - Dakar|                 CMS|Vous acquérez vot...|               Bac+5|      Freelance|Expérience entre ...|
+|            TALIACOM|   Graphiste - Dakar|                 CMS|Vous acquérez vot...|                plus|          Stage|Expérience entre ...|
+|            TALIACOM|   Graphiste - Dakar|                 CMS|Vous acquérez vot...|                plus|      Freelance|Expérience entre ...|
+|         AFRICASHORE|Cloud System Inte...|               AGILE|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|Cloud System Inte...|               AGILE|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|Cloud System Inte...|                 CVS|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|Cloud System Inte...|                 CVS|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|               3D 2D| Minimum niveau BFEM|Qualification ava...|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|               3D 2D| Minimum niveau BFEM|Qualification ava...|          Stage|jeune diplômé et ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|               3D 2D| Minimum niveau BFEM|                 Bac|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|               3D 2D| Minimum niveau BFEM|                 Bac|          Stage|jeune diplômé et ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|               3D 2D| Minimum niveau BFEM|               Bac+1|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|               3D 2D| Minimum niveau BFEM|               Bac+1|          Stage|jeune diplômé et ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|               3D 2D| Minimum niveau BFEM|               Bac+2|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|               3D 2D| Minimum niveau BFEM|               Bac+2|          Stage|jeune diplômé et ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|               3D 2D| Minimum niveau BFEM|               Bac+3|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|               3D 2D| Minimum niveau BFEM|               Bac+3|          Stage|jeune diplômé et ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|               3D 2D| Minimum niveau BFEM|               Bac+4|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|               3D 2D| Minimum niveau BFEM|               Bac+4|          Stage|jeune diplômé et ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|               3D 2D| Minimum niveau BFEM|               Bac+5|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|               3D 2D| Minimum niveau BFEM|               Bac+5|          Stage|jeune diplômé et ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|               3D 2D| Minimum niveau BFEM|                plus|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|               3D 2D| Minimum niveau BFEM|                plus|          Stage|jeune diplômé et ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|                  4D| Minimum niveau BFEM|Qualification ava...|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|                  4D| Minimum niveau BFEM|Qualification ava...|          Stage|jeune diplômé et ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|                  4D| Minimum niveau BFEM|                 Bac|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|                  4D| Minimum niveau BFEM|                 Bac|          Stage|jeune diplômé et ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|                  4D| Minimum niveau BFEM|               Bac+1|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|                  4D| Minimum niveau BFEM|               Bac+1|          Stage|jeune diplômé et ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|                  4D| Minimum niveau BFEM|               Bac+2|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|                  4D| Minimum niveau BFEM|               Bac+2|          Stage|jeune diplômé et ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|                  4D| Minimum niveau BFEM|               Bac+3|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|                  4D| Minimum niveau BFEM|               Bac+3|          Stage|jeune diplômé et ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|                  4D| Minimum niveau BFEM|               Bac+4|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|                  4D| Minimum niveau BFEM|               Bac+4|          Stage|jeune diplômé et ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|                  4D| Minimum niveau BFEM|               Bac+5|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|                  4D| Minimum niveau BFEM|               Bac+5|          Stage|jeune diplômé et ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|                  4D| Minimum niveau BFEM|                plus|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|                  4D| Minimum niveau BFEM|                plus|          Stage|jeune diplômé et ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|           Nettoyage| Minimum niveau BFEM|Qualification ava...|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|           Nettoyage| Minimum niveau BFEM|Qualification ava...|          Stage|jeune diplômé et ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|           Nettoyage| Minimum niveau BFEM|                 Bac|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|           Nettoyage| Minimum niveau BFEM|                 Bac|          Stage|jeune diplômé et ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|           Nettoyage| Minimum niveau BFEM|               Bac+1|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|           Nettoyage| Minimum niveau BFEM|               Bac+1|          Stage|jeune diplômé et ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|           Nettoyage| Minimum niveau BFEM|               Bac+2|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|           Nettoyage| Minimum niveau BFEM|               Bac+2|          Stage|jeune diplômé et ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|           Nettoyage| Minimum niveau BFEM|               Bac+3|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|           Nettoyage| Minimum niveau BFEM|               Bac+3|          Stage|jeune diplômé et ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|           Nettoyage| Minimum niveau BFEM|               Bac+4|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|           Nettoyage| Minimum niveau BFEM|               Bac+4|          Stage|jeune diplômé et ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|           Nettoyage| Minimum niveau BFEM|               Bac+5|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|           Nettoyage| Minimum niveau BFEM|               Bac+5|          Stage|jeune diplômé et ...|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|           Nettoyage| Minimum niveau BFEM|                plus|          Stage|            Etudiant|
+|REGARD GLOBAL SER...|Stagiaire en Qual...|           Nettoyage| Minimum niveau BFEM|                plus|          Stage|jeune diplômé et ...|
+|         AFRICASHORE|JAVA JEE Develope...|               AGILE|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|               AGILE|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|          ANGULAR JS|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|          ANGULAR JS|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|               AZURE|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|               AZURE|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|            BIG DATA|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|            BIG DATA|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|           CASSANDRA|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|           CASSANDRA|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|           COUCHBASE|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|           COUCHBASE|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|                 CSS|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|                 CSS|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|                 CVS|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|                 CVS|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|              DOCKER|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|              DOCKER|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|                 GIT|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|                 GIT|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|              HADOOP|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|              HADOOP|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|           HIBERNATE|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|           HIBERNATE|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|                HTML|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|                HTML|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|                J2EE|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|                J2EE|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|                JAVA|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|                JAVA|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|            JAVA JEE|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|            JAVA JEE|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|          JAVASCRIPT|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|          JAVASCRIPT|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|               JBOSS|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|               JBOSS|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|             JENKINS|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|             JENKINS|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|               MAVEN|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|               MAVEN|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|                 MVC|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|                 MVC|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|               MYSQL|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|               MYSQL|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|               NOSQL|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|               NOSQL|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|              ORACLE|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|              ORACLE|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|               REDIS|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|               REDIS|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|                REST|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|                REST|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|                SOAP|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|                SOAP|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|               SPARK|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|               SPARK|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|              SPRING|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|              SPRING|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|                 SQL|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|                 SQL|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|              STRUTS|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|              STRUTS|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|            WEBLOGIC|Bachelors degree ...|               Bac+3|            CDI|Expérience entre ...|
+|         AFRICASHORE|JAVA JEE Develope...|            WEBLOGIC|Bachelors degree ...|               Bac+3|CDD - Freelance|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|             Gestion|Discrétion et Loy...|               Bac+3|            CDI|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|             Gestion|Discrétion et Loy...|               Bac+3|            CDD|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|             Gestion|Discrétion et Loy...|               Bac+4|            CDI|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|             Gestion|Discrétion et Loy...|               Bac+4|            CDD|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|             Gestion|Discrétion et Loy...|               Bac+5|            CDI|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|             Gestion|Discrétion et Loy...|               Bac+5|            CDD|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|             Gestion|Discrétion et Loy...|                plus|            CDI|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|             Gestion|Discrétion et Loy...|                plus|            CDD|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|          Management|Discrétion et Loy...|               Bac+3|            CDI|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|          Management|Discrétion et Loy...|               Bac+3|            CDD|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|          Management|Discrétion et Loy...|               Bac+4|            CDI|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|          Management|Discrétion et Loy...|               Bac+4|            CDD|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|          Management|Discrétion et Loy...|               Bac+5|            CDI|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|          Management|Discrétion et Loy...|               Bac+5|            CDD|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|          Management|Discrétion et Loy...|                plus|            CDI|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|          Management|Discrétion et Loy...|                plus|            CDD|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|       Planification|Discrétion et Loy...|               Bac+3|            CDI|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|       Planification|Discrétion et Loy...|               Bac+3|            CDD|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|       Planification|Discrétion et Loy...|               Bac+4|            CDI|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|       Planification|Discrétion et Loy...|               Bac+4|            CDD|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|       Planification|Discrétion et Loy...|               Bac+5|            CDI|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|       Planification|Discrétion et Loy...|               Bac+5|            CDD|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|       Planification|Discrétion et Loy...|                plus|            CDI|Expérience entre ...|
+|        TIENS DS COM|Assistante Person...|       Planification|Discrétion et Loy...|                plus|            CDD|Expérience entre ...|
+|      TECTRA SÉNÉGAL|Assistant Directe...|         Fabrication|Bac + 3 en admini...|               Bac+3|            CDD|Expérience entre ...|
+|      TECTRA SÉNÉGAL|Assistant Directe...|Gestion Industrielle|Bac + 3 en admini...|               Bac+3|            CDD|Expérience entre ...|
+|      TECTRA SÉNÉGAL|Assistant Directe...|           Industrie|Bac + 3 en admini...|               Bac+3|            CDD|Expérience entre ...|
+|      TECTRA SÉNÉGAL|Assistant Directe...|         Maintenance|Bac + 3 en admini...|               Bac+3|            CDD|Expérience entre ...|
+|      TECTRA SÉNÉGAL|Assistant Directe...|   Normes de Qualité|Bac + 3 en admini...|               Bac+3|            CDD|Expérience entre ...|
+|      TECTRA SÉNÉGAL|Assistant Directe...|           Processus|Bac + 3 en admini...|               Bac+3|            CDD|Expérience entre ...|
+|      TECTRA SÉNÉGAL|Assistant Directe...|          Production|Bac + 3 en admini...|               Bac+3|            CDD|Expérience entre ...|
+|      TECTRA SÉNÉGAL|Assistant Directe...|        Productivité|Bac + 3 en admini...|               Bac+3|            CDD|Expérience entre ...|
+|      TECTRA SÉNÉGAL|Assistant Directe...|             Qualité|Bac + 3 en admini...|               Bac+3|            CDD|Expérience entre ...|
+|      TECTRA SÉNÉGAL|Assistant Directe...|Techniques de Pro...|Bac + 3 en admini...|               Bac+3|            CDD|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+2|            CDI|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+2|            CDD|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+2|        Intérim|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+2|          Stage|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+2|      Freelance|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+2|     Alternance|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+2|  Temps partiel|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+2|     Statutaire|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+3|            CDI|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+3|            CDD|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+3|        Intérim|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+3|          Stage|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+3|      Freelance|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+3|     Alternance|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+3|  Temps partiel|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+3|     Statutaire|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+4|            CDI|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+4|            CDD|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+4|        Intérim|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+4|          Stage|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+4|      Freelance|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+4|     Alternance|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+4|  Temps partiel|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+4|     Statutaire|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+5|            CDI|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+5|            CDD|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+5|        Intérim|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+5|          Stage|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+5|      Freelance|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+5|     Alternance|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+5|  Temps partiel|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|               Bac+5|     Statutaire|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|                plus|            CDI|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|                plus|            CDD|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|                plus|        Intérim|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|                plus|          Stage|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|                plus|      Freelance|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|                plus|     Alternance|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|                plus|  Temps partiel|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|Amélioration Cont...|Expérience confir...|                plus|     Statutaire|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|              Fluide|Expérience confir...|               Bac+2|            CDI|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|              Fluide|Expérience confir...|               Bac+2|            CDD|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|              Fluide|Expérience confir...|               Bac+2|        Intérim|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|              Fluide|Expérience confir...|               Bac+2|          Stage|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|              Fluide|Expérience confir...|               Bac+2|      Freelance|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|              Fluide|Expérience confir...|               Bac+2|     Alternance|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|              Fluide|Expérience confir...|               Bac+2|  Temps partiel|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|              Fluide|Expérience confir...|               Bac+2|     Statutaire|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|              Fluide|Expérience confir...|               Bac+3|            CDI|Expérience entre ...|
+|          SENEA FOOD|Planificateur(tri...|              Fluide|Expérience confir...|               Bac+3|            CDD|Expérience entre ...|
++--------------------+--------------------+--------------------+--------------------+--------------------+---------------+--------------------+
+only showing top 500 rows
+
+>>> df_comp.show(500)100)[1P)[1P)[1P)1)0)
+[Stage 52:>                                                       (0 + 12) / 19][Stage 52:========>                                               (3 + 12) / 19][Stage 52:==========================>                             (9 + 10) / 19][Stage 52:================================>                       (11 + 8) / 19][Stage 52:===================================>                    (12 + 7) / 19][Stage 52:======================================>                 (13 + 6) / 19]                                                                                +----------------+--------------------+--------------+--------------------+--------------------+-------+--------------------+
+|      entreprise|               poste|    competence|           formation|        niveau_etude|contrat|          experience|
++----------------+--------------------+--------------+--------------------+--------------------+-------+--------------------+
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|Qualification ava...|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|Qualification ava...|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|Qualification ava...|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|Qualification ava...|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                 Bac|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                 Bac|    CDI|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                 Bac|Intérim|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                 Bac|Intérim|jeune diplômé et ...|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+1|    CDI|            Etudiant|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+1|    CDI|jeune diplômé et ...|
++----------------+--------------------+--------------+--------------------+--------------------+-------+--------------------+
+only showing top 10 rows
+
+>>> df_clean.printSchema()
+root
+ |-- entreprise: string (nullable = true)
+ |-- poste: string (nullable = true)
+ |-- date_de_publication: string (nullable = true)
+ |-- formation_clean: string (nullable = true)
+ |-- niveau_etude_clean: array (nullable = true)
+ |    |-- element: string (containsNull = false)
+ |-- contract: array (nullable = true)
+ |    |-- element: string (containsNull = false)
+ |-- region_clean: string (nullable = true)
+ |-- experience: array (nullable = true)
+ |    |-- element: string (containsNull = false)
+ |-- competences: array (nullable = true)
+ |    |-- element: string (containsNull = false)
+
+>>> df_clean.printSchema()[C[C[C[C[C[C[C[C[6Pomp.show(10)500)100)[1P)[C[C[C[C)[Kexplode(col("contract")).alias("contrat"), explode(col("experience")).alias("experience")[C[C[C[Ccol("formation_clean").alias("formation"), explode(col("niveau_etude_clean")).alias("niveau_etude"),[C[C[C[C[3Pdf_comp = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"),
+... df_comp = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"),[C[C[C[C[C[C[C[Clean.printSchema()[K[C[C[C[C[C[C[C[C[6Pomp.show(10)500)100)[1P)[C[C[C[C)[Kexplode(col("contract")).alias("contrat"), explode(col("experience")).alias("experience")[C[C[C[Ccol("formation_clean").alias("formation"), explode(col("niveau_etude_clean")).alias("niveau_etude"),
+... col("formation_clean").alias("formation"), explode(col("niveau_etude_clean")).alias("niveau_etude"),[C[C[C[C[3Pdf_comp = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"),[C[C[C[C[C[C[C[Clean.printSchema()[K[C[C[C[C[C[C[C[C[6Pomp.show(10)500)100)[1P)[C[C[C[C)[Kexplode(col("contract")).alias("contrat"), explode(col("experience")).alias("experience")
+... , [K [K [K col[K[K[K[Kcol("ref[Kgion_clean").alias("region"), [K col(data[Ke_de_publication""date_de_publication"[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C).alias("date_de_pulication")
+... =[K)
+>>> df_comp.show(10)
+[Stage 55:>                                                       (0 + 12) / 19][Stage 55:================================>                       (11 + 8) / 19][Stage 55:===================================>                    (12 + 7) / 19][Stage 55:======================================>                 (13 + 6) / 19]                                                                                +----------------+--------------------+--------------+--------------------+--------------------+-------+--------------------+-------------+------------------+
+|      entreprise|               poste|    competence|           formation|        niveau_etude|contrat|          experience|       region|date_de_pulication|
++----------------+--------------------+--------------+--------------------+--------------------+-------+--------------------+-------------+------------------+
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|Qualification ava...|    CDI|            Etudiant|International|        20.06.2025|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|Qualification ava...|    CDI|jeune diplômé et ...|International|        20.06.2025|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|Qualification ava...|Intérim|            Etudiant|International|        20.06.2025|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|Qualification ava...|Intérim|jeune diplômé et ...|International|        20.06.2025|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                 Bac|    CDI|            Etudiant|International|        20.06.2025|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                 Bac|    CDI|jeune diplômé et ...|International|        20.06.2025|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                 Bac|Intérim|            Etudiant|International|        20.06.2025|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|                 Bac|Intérim|jeune diplômé et ...|International|        20.06.2025|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+1|    CDI|            Etudiant|International|        20.06.2025|
+|INTRA INTERIM SN|Ouvrier d’Usine -...|Accompagnement|Niveau d’anglais ...|               Bac+1|    CDI|jeune diplômé et ...|International|        20.06.2025|
++----------------+--------------------+--------------+--------------------+--------------------+-------+--------------------+-------------+------------------+
+only showing top 10 rows
+
+>>> s[Kdf_comp
+df_comp        df_competence  
+>>> df_comp.printSchema()
+root
+ |-- entreprise: string (nullable = true)
+ |-- poste: string (nullable = true)
+ |-- competence: string (nullable = false)
+ |-- formation: string (nullable = true)
+ |-- niveau_etude: string (nullable = false)
+ |-- contrat: string (nullable = false)
+ |-- experience: string (nullable = false)
+ |-- region: string (nullable = true)
+ |-- date_de_pulication: string (nullable = true)
+
+>>> df_ml = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"),
+... col("formation_clean").alias("formation"), explode(col("niveau_etude_clean")).alias("niveau_etude"),
+... explode(col("contract")).alias("contrat"), explode(col("experience")).alias("experience"),
+... col("region_clean").alias("region"), col("date_de_publication").alias("date_de_pulication")
+... )
+>>> df_ml [K.printSchema()
+root
+ |-- entreprise: string (nullable = true)
+ |-- poste: string (nullable = true)
+ |-- competence: string (nullable = false)
+ |-- formation: string (nullable = true)
+ |-- niveau_etude: string (nullable = false)
+ |-- contrat: string (nullable = false)
+ |-- experience: string (nullable = false)
+ |-- region: string (nullable = true)
+ |-- date_de_pulication: string (nullable = true)
+
+>>> df_ml.printSchema()[K[K[K[K[K[K[K[K[K[K[K[K[Kshow(5[K10, trunc[Kcata[Ke=False)
+[Stage 58:>                                                       (0 + 12) / 19][Stage 58:==========================>                             (9 + 10) / 19][Stage 58:===================================>                    (12 + 7) / 19][Stage 58:======================================>                 (13 + 6) / 19]                                                                                +----------------+-----------------------------------+--------------+-------------------------------------+-----------------------+-------+---------------------+-------------+------------------+
+|entreprise      |poste                              |competence    |formation                            |niveau_etude           |contrat|experience           |region       |date_de_pulication|
++----------------+-----------------------------------+--------------+-------------------------------------+-----------------------+-------+---------------------+-------------+------------------+
+|INTRA INTERIM SN|Ouvrier d’Usine - Roumanie (Europe)|Accompagnement|Niveau d’anglais intermédiaire requis|Qualification avant bac|CDI    |Etudiant             |International|20.06.2025        |
+|INTRA INTERIM SN|Ouvrier d’Usine - Roumanie (Europe)|Accompagnement|Niveau d’anglais intermédiaire requis|Qualification avant bac|CDI    |jeune diplômé et plus|International|20.06.2025        |
+|INTRA INTERIM SN|Ouvrier d’Usine - Roumanie (Europe)|Accompagnement|Niveau d’anglais intermédiaire requis|Qualification avant bac|Intérim|Etudiant             |International|20.06.2025        |
+|INTRA INTERIM SN|Ouvrier d’Usine - Roumanie (Europe)|Accompagnement|Niveau d’anglais intermédiaire requis|Qualification avant bac|Intérim|jeune diplômé et plus|International|20.06.2025        |
+|INTRA INTERIM SN|Ouvrier d’Usine - Roumanie (Europe)|Accompagnement|Niveau d’anglais intermédiaire requis|Bac                    |CDI    |Etudiant             |International|20.06.2025        |
+|INTRA INTERIM SN|Ouvrier d’Usine - Roumanie (Europe)|Accompagnement|Niveau d’anglais intermédiaire requis|Bac                    |CDI    |jeune diplômé et plus|International|20.06.2025        |
+|INTRA INTERIM SN|Ouvrier d’Usine - Roumanie (Europe)|Accompagnement|Niveau d’anglais intermédiaire requis|Bac                    |Intérim|Etudiant             |International|20.06.2025        |
+|INTRA INTERIM SN|Ouvrier d’Usine - Roumanie (Europe)|Accompagnement|Niveau d’anglais intermédiaire requis|Bac                    |Intérim|jeune diplômé et plus|International|20.06.2025        |
+|INTRA INTERIM SN|Ouvrier d’Usine - Roumanie (Europe)|Accompagnement|Niveau d’anglais intermédiaire requis|Bac+1                  |CDI    |Etudiant             |International|20.06.2025        |
+|INTRA INTERIM SN|Ouvrier d’Usine - Roumanie (Europe)|Accompagnement|Niveau d’anglais intermédiaire requis|Bac+1                  |CDI    |jeune diplômé et plus|International|20.06.2025        |
++----------------+-----------------------------------+--------------+-------------------------------------+-----------------------+-------+---------------------+-------------+------------------+
+only showing top 10 rows
+
+>>> d[Kdf_ml.x[Kcount()
+[Stage 61:>                                                       (0 + 12) / 19][Stage 61:=================>                                      (6 + 12) / 19][Stage 61:==========================>                             (9 + 10) / 19][Stage 61:=============================>                          (10 + 9) / 19][Stage 61:===================================>                    (12 + 7) / 19][Stage 61:======================================>                 (13 + 6) / 19][Stage 61:=========================================>              (14 + 5) / 19]                                                                                6710
+>>> df.count()
+[Stage 67:>                                                       (0 + 12) / 19][Stage 67:==>                                                     (1 + 12) / 19][Stage 67:===================================>                    (12 + 7) / 19][Stage 67:=========================================>              (14 + 5) / 19]                                                                                420
+>>> [K>>> [K>>> [K>>> [K>>> [K>>> [K>>> [K>>> [K>>> [K>>> [K>>> [K>>> spark.stop()
+>>> s[Kexit [K()
+$ exit 
+
+Script done on 2025-11-05 16:11:15+00:00 [COMMAND_EXIT_CODE="0"]
