@@ -15,3 +15,5 @@ Datalakes/hadoop_logs/
 DataWarehouse/DataWarhouse_data/
 Dossiers_json_excel_csv/
 Spark/script-sparkshell/.bash_history
+Airflow/logs/dag_processor_manager/dag_processor_manager.log
+Spark/script-sparkshell/.python_history
