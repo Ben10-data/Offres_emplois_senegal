@@ -1,4 +1,4 @@
-FROM spark:3.5.7-scala2.12-java17-ubuntu
+FROM spark:3.5.7-scala2.12-java11-ubuntu
 
 USER root
 
@@ -12,11 +12,17 @@ RUN set -ex; \
     chown -R spark:spark /home/spark && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir pandas==2.2.3
+RUN pip install --no-cache-dir pandas==2.1.1
 # Variables d'environnement, ici c'est l'endroit dans le container ou est stocker nos fichiers .ipynb 
 # t'as capté 
 ENV HOME=/home/spark
 ENV PATH=$PATH:$HOME/.local/bin
+ENV JAVA_HOME=/opt/java/openjdk
+#ENV PATH=$JAVA_HOME/bin:$PATH
+ENV SPARK_HOME=/opt/spark
+ENV HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
+ENV PATH=$SPARK_HOME/bin:$PATH
+
 
 USER spark
 WORKDIR /home/spark

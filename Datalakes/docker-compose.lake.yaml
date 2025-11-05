@@ -113,39 +113,50 @@ services:
 #### ------------------------ Spark ----------------- SPARK ------------- SPARK -------------#####
 ###---------
 
-  spark-client: 
-    build:
+  spark:
+    build: 
       context: .
       dockerfile: Dockerfile.spark
-    container_name: sparkClient
-    hostname: spark-client
+    container_name: spark-client
     command: bash
     stdin_open: true
     tty: true
     environment:
-      - SPARK_HOME=/home/spark
       - HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
-      - YARN_CONF_DIR=/opt/hadoop/etc/hadoop
-      - JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-      - HDFS_NAMENODE_URI=hdfs://namenode:8020
-      - YARN_RESOURCEMANAGER_HOST=resourcemanager
-      - PYSPARK_PYTHON=python3
+      - SPARK_HOME=/opt/spark
     volumes:
       - ../Spark/app:/opt/spark/app
-      - ../Datalakes/config:/opt/hadoop/etc/hadoop
-      - ./logs:/logs
+      - ../Spark/app/data:/data
+      - ./hadoop-config:/opt/hadoop/etc/hadoop
     depends_on:
       - namenode
+      - datanode1
+      - datanode2
       - resourcemanager
     networks:
       - offres_emplois_dakar
+
+  jupyter:
+    build:
+      context: .
+      dockerfile: Dockerfile.spark
+    container_name: jupyter
+    command: bash -c "jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root"
     ports:
       - "8888:8888"
-  
-  
-include:
-  ../Spark/app/spark-compose.yaml
-
+    environment:
+      - PYSPARK_PYTHON=python3
+      - JUPYTER_TOKEN=benomar10
+      - HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
+      - SPARK_HOME=/opt/spark
+    volumes:
+      - ../Spark/notebooks:/home/spark/notebooks:rw
+      - ../Spark/app/data:/data
+      - ./hadoop-config:/opt/hadoop/etc/hadoop
+    depends_on:
+      - spark
+    networks:
+      - offres_emplois_dakar
 
 
 

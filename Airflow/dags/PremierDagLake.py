@@ -109,4 +109,5 @@ with DAG(dag_id="Premier_dag",
     #
 
     start_etape >>group_scraping >> Ingection_BD >> group_Lake >> end_etape 
+    # start_etape >> group_Lake >> end_etape 
     
