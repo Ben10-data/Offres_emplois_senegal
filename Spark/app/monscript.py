@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, split
+from pyspark.sql.functions import col, split, explode
 from pyspark.sql import functions as F 
 
 # creation d'une session spark 
@@ -129,12 +129,18 @@ df_competence = df_experience.withColumn(
 df_clean = df_competence.drop("Competence")
 
 
+df_clean.show(5, truncate=False)
+
 ###---------------------------------------------------------------------------------#######""
 #------------------------------------------------------------------------------------#
 # Creation du deuxieme dataset pour le machine learning
 
-#df_ml =
+df_ml = df_clean.select("entreprise", "poste", explode(col("competences")).alias("competence"),
+col("formation_clean").alias("formation"), explode(col("niveau_etude_clean")).alias("niveau_etude"),
+explode(col("contract")).alias("contrat"), explode(col("experience")).alias("experience"),
+col("region_clean").alias("region"), col("date_de_publication").alias("date_de_pulication")
+)
 
-df_clean.show(5, truncate=False)
+df_ml.show(10, truncate=False)
 
 spark.stop()
