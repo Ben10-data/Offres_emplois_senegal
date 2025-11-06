@@ -141,6 +141,21 @@ explode(col("contract")).alias("contrat"), explode(col("experience")).alias("exp
 col("region_clean").alias("region"), col("date_de_publication").alias("date_de_pulication")
 )
 
+
+print("dataset pour le machine learning et l'analyse analytique")
 df_ml.show(10, truncate=False)
+
+print("dataset normale sur les offres")
+df_clean.show(10, truncate=False)
+
+
+
+####--------________---------------========------_______
+#------------------------ Datawarehouse --------------------------------------####
+#####-------_____============_______
+
+print("Ingection vers notre dataWarehouse")
+
+
 
 spark.stop()
