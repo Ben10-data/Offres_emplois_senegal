@@ -89,20 +89,20 @@ class ConnexionLake(ConnexionDB):
     def mongo_to_hdfs(self):
 
         for col in self.voir_listes_collections():
-           
-           # travailler avec chaque collection apres a partir de son nom 
-           # on doit creer un object a partir du nom 
-           col = self.get_mongoCon()[col] 
-           docs = list(col.find({},{'_id':0}))
+            
+            # travailler avec chaque collection apres a partir de son nom 
+            # on doit creer un object a partir du nom 
+            col = self.get_mongoCon()[col] 
+            docs = list(col.find({},{'_id':0}))
 
-           df_mongo = pd.DataFrame(docs)
+            df_mongo = pd.DataFrame(docs)
 
-           spark = SparkSession.builder \
+            spark = SparkSession.builder \
                 .appName("MySQLtoHDFS") \
                 .getOrCreate()
             
-           df_spark = spark.createDataFrame(df_mongo)
-           df_spark.write.mode("append").parquet("hdfs://namenode:8020/ben/dataLake")
+            df_spark = spark.createDataFrame(df_mongo)
+            df_spark.write.mode("append").parquet("hdfs://namenode:8020/ben/dataLake")
         
         return f'Datalake bien alimenté a partir de MongoDB a {datetime.now().ctime()}'
 

@@ -9,7 +9,7 @@ spark = SparkSession.builder.appName("TestApp").getOrCreate()
 spark.version
 
 # lecture de nos fichier hdfs 
-df = spark.read.parquet("hdfs://namenode:8020/ben/dataLake/")
+df = spark.read.option("mergeSchema", "true").parquet("hdfs://namenode:8020/ben/dataLake/")
 df = df.dropDuplicates()
 # compter les nombres de lignes qu'on a 
 df.count()
