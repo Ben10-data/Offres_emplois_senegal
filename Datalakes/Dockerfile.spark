@@ -7,10 +7,33 @@ USER root
 RUN set -ex; \
     apt-get update; \
     apt-get install -y python3 python3-pip; \
-    pip install --no-cache-dir jupyter findspark pyspark; \
+    pip install --no-cache-dir jupyter findspark pyspark==3.5.7; \
     mkdir -p /home/spark && \ 
     chown -R spark:spark /home/spark && \
     rm -rf /var/lib/apt/lists/*
+
+# Installer SSH
+
+RUN set -ex && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends software-properties-common && \
+    add-apt-repository universe && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends openssh-server && \
+    mkdir /var/run/sshd && \
+    echo 'root:root' | chpasswd && \
+    sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' /etc/pam.d/sshd && \
+    rm -rf /var/lib/apt/lists/*
+
+
+RUN mkdir -p /home/airflow/.ssh && \
+    chmod 777 -R /home/airflow/.ssh
+
+# on veut utiliser postgres, il nous ajouter son jar pour pertmettre la compilation 
+RUN wget https://jdbc.postgresql.org/download/postgresql-42.7.3.jar -P /opt/spark/jars/
+
+
 
 RUN pip install --no-cache-dir pandas==2.1.1
 # Variables d'environnement, ici c'est l'endroit dans le container ou est stocker nos fichiers .ipynb 
@@ -27,7 +50,9 @@ ENV PATH=$SPARK_HOME/bin:$PATH
 USER spark
 WORKDIR /home/spark
 
-EXPOSE 8888
+EXPOSE 22 8888
 
 # On lance note jupyter à l'addresse suivant 
-CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser"]
+# CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser"]
+
+# CMD service ssh start && su spark -c "jupyter lab --ip=0.0.0.0 --port=8888 --no-browser"

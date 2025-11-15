@@ -1,6 +1,7 @@
 from airflow import DAG
 from airflow.operators.bash import BashOperator 
 from airflow.operators.python import PythonOperator
+from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 
 from airflow.decorators import task
 from airflow.utils.task_group import TaskGroup
@@ -24,16 +25,20 @@ with DAG(dag_id="Premier_dag",
     with TaskGroup("Etape_du_scrping",) as group_scraping:
         # On cree deux taches qui s'executer automatiquement 
 
-        # Premiere tache de la semaine 
+        #Premiere tache de la semaine 
         tache1 = BashOperator(
             task_id = "scrap_emploi_dakar",
             bash_command = "cd /opt/airflow/scrapjob/scrapjob/spiders && scrapy crawl emploi_dakar"
         )
+        # tache1 = BashOperator(
+        #     task_id = "scrap_emploi_dakar",
+        #      bash_command = "echo bonjour "
+        # )
         # Deuxieme tache de la meme semaine 
-        tache2 = BashOperator(
-            task_id = "scrap_emploi_senegal", 
-            bash_command = "cd /opt/airflow/scrapjob/scrapjob/spiders && scrapy crawl emploisenegal",
-        )
+        # tache2 = BashOperator(
+        #     task_id = "scrap_emploi_senegal", 
+        #     bash_command = "cd /opt/airflow/scrapjob/scrapjob/spiders && scrapy crawl emploisenegal",
+        # )
     
     with TaskGroup("Alimentation_des_bases_de_données",) as Ingection_BD:
         
@@ -60,7 +65,7 @@ with DAG(dag_id="Premier_dag",
         Python_Postgres_Ingection = PythonOperator(
             task_id="Postgres_Ingection",
             python_callable=Postgres_Inge,
-          
+        
         )
     ###------------------- Alimentation Mongo ------------------------####
         def MongoIng():
@@ -99,15 +104,17 @@ with DAG(dag_id="Premier_dag",
         Python_mongo_ingection >> etape_Lake2
     
 
-    end_etape = BashOperator(
-        task_id ='a_suivre', 
-        bash_command = " echo a suivre .... "
+    etape_warehouse = SparkSubmitOperator(
+        task_id="alimentation_datawarehouse",
+        application="/opt/spark/app/monscript.py",
+        conn_id="spark_default",
+        conf={
+            "spark.yarn.submit.waitAppCompletion": "true"
+        }
     )
 
 
 
-    #
-
-    start_etape >>group_scraping >> Ingection_BD >> group_Lake >> end_etape 
+    start_etape >>group_scraping >> Ingection_BD >> group_Lake >> etape_warehouse 
     # start_etape >> group_Lake >> end_etape 
     

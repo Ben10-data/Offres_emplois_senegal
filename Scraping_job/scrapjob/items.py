@@ -15,6 +15,7 @@ class Emploi_senegal(scrapy.Item):
 
     poste = scrapy.Field()
     entreprise = scrapy.Field()
+    lien = scrapy.Field()
     niveau_etude = scrapy.Field()
     niveau_experience = scrapy.Field()
     contrat_propose = scrapy.Field()
@@ -26,6 +27,7 @@ class Emploi_senegal(scrapy.Item):
 class Dakar_Emploi(scrapy.Item):
     poste = scrapy.Field()
     entreprise = scrapy.Field()
+    lien = scrapy.Field()
     region = scrapy.Field()
     contract_propose = scrapy.Field()
     date_de_publication = scrapy.Field()
@@ -33,6 +35,7 @@ class Dakar_Emploi(scrapy.Item):
 
 class SenJob(scrapy.Item):
     poste = scrapy.Field()
+    lien = scrapy.Field()
     region = scrapy.Field()
     date_de_publication = scrapy.Field()
 

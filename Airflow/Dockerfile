@@ -28,8 +28,4 @@ RUN pip install --no-cache-dir --upgrade pip && \
     #     pyspark \
     #     pymongo==4.8.0
 
-
-
-
-
-
+RUN pip install apache-airflow-providers-apache-spark==4.2.0

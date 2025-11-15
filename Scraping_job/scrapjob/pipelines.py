@@ -28,11 +28,11 @@ class Indentation_Donnee:
         if item :
             self.items[spider.name].append(dict(item))
         return item 
- 
+
     def close_spider(self, spider):
 
         # creation du dossier de sortie ou pour stocker nos fichier json 
-        dossier_sortie = "/opt/airflow/donnes_des_json"
+        dossier_sortie = "/opt/airflow/Dossiers_json_excel_csv/donnesJson"
         os.makedirs(dossier_sortie, exist_ok=True)
 
         # creation des fichiers 
@@ -41,11 +41,3 @@ class Indentation_Donnee:
         # Stockage 
         with open(file_sortie, "w", encoding="utf-8") as f:
             json.dump(self.items[spider.name],f, indent=4, ensure_ascii=False)
-
-
-
-
-
-    
-
-        

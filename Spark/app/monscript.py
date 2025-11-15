@@ -3,7 +3,12 @@ from pyspark.sql.functions import col, split, explode
 from pyspark.sql import functions as F 
 
 # creation d'une session spark 
-spark = SparkSession.builder.appName("TestApp").getOrCreate()
+spark = SparkSession.builder \
+    .appName("Traitement_depuis_hdfs") \
+    .master("yarn") \
+    .config("spark.hadoop.fs.defaultFS", "hdfs://namenode:8020") \
+    .config("spark.hadoop.yarn.resourcemanager.hostname", "resourcemanager") \
+    .getOrCreate()
 
 # version de la version de spark 
 spark.version
@@ -156,6 +161,50 @@ df_clean.show(10, truncate=False)
 
 print("Ingection vers notre dataWarehouse")
 
+
+### ---------------------- nos liens --------------------------------------------####
+url = "jdbc:postgresql://postgres_warehouse:5432/Warehouse_DB"
+user = "admin"
+password = "admin_pwd"
+driver = "org.postgresql.Driver"
+
+
+###---------------Creation du dataset ML --------------------------------####
+
+df_ml.write\
+    .format("jdbc")\
+    .option("url", url)\
+    .option("dbtable","offres_emploi_ml")\
+    .option("user", user)\
+    .option("password",password)\
+    .option("driver", driver)\
+    .mode("append")\
+    .save()
+
+
+#### ---------------- Creation du dataSet normale -------------------------###
+
+
+##########___-------Mise en forme----------__________________________###
+df_propres = df_clean.select("entreprise", "poste", col("competences").alias("competence"),
+col("formation_clean").alias("formation"), col("niveau_etude_clean").alias("niveau_etude"),
+col("contract").alias("contrat"), col("experience").alias("experience"),
+col("region_clean").alias("region"), col("date_de_publication").alias("date_de_pulication")
+)
+
+
+df_propres.write\
+    .format("jdbc")\
+    .option("url", url)\
+    .option("dbtable","offres_emploi")\
+    .option("user", user)\
+    .option("password",password)\
+    .option("driver", driver)\
+    .mode("append")\
+    .save()
+
+
+print("--------------------------tout esst carree-----------------------------")
 
 
 spark.stop()

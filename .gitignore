@@ -19,3 +19,5 @@ Airflow/logs/dag_processor_manager/dag_processor_manager.log
 Spark/script-sparkshell/.python_history
 Spark/notebooks
 Airflow/dags/__pycache__/PremierDagLake.cpython-312.pyc
+Spark/script-sparkshell/.ssh/
+Spark/script-sparkshell/.cache/

@@ -38,6 +38,7 @@ class EmploiDakarSpider(scrapy.Spider):
             lien_a = element.css('a')
             if lien_a:
                 dakar_item['poste'] = element.css("a h3::text").get()
+                dakar_item['lien'] = element.css("a::attr(href)").get()
                 dakar_item['entreprise'] = element.css("a div.company strong::text").get()
                 dakar_item['region'] = element.css("a div.location::text").get()
                 dakar_item['contract_propose'] = element.css("a ul.meta li:nth-child(1)::text").get()
@@ -62,4 +63,4 @@ class EmploiDakarSpider(scrapy.Spider):
                 },
             callback=self.parse
         )
-       
+    

@@ -92,10 +92,10 @@ class Gestion_des_donnees(ConnexionDB):
             if el.endswith('.csv'):
                 pd_csv = pd.read_csv(el)
                 pd_csv.to_sql(
-                  name= f"{nom_du_table}_{self.date}".replace('-','_'), 
-                  con= self.get_postCon(),          
-                  if_exists="replace",       
-                  index=False                
+                    name= f"{nom_du_table}_{self.date}".replace('-','_'), 
+                    con= self.get_postCon(),          
+                    if_exists="replace",       
+                    index=False                
                 )
             elif el.endswith('.xls'or '.xlsx'):
                 pd_excel = pd.read_excel(el)
@@ -120,52 +120,58 @@ class Gestion_des_donnees(ConnexionDB):
 
     def Mysql_ingection(self):
         fichiers = self.liens_des_fichiers()
-        for el in fichiers:
-            nom_du_table = self.extrait_nom(el)
-            if el.endswith('.csv'):
-                pd_csv = pd.read_csv(el)
-                pd_csv.to_sql(
-                    name= f"{nom_du_table}_{self.date}".replace('-','_'),   
-                    con= self.get_mysql_conn(),          
-                    if_exists="replace",       
-                    index=False                
-                )
-            elif el.endswith('.xls'or '.xlsx'):
-                pd_excel = pd.read_excel(el)
-                pd_excel.to_sql(
-                    name=f"{nom_du_table}_{self.date}".replace('-','_'),
-                    con= self.get_mysql_conn(),
-                    if_exists="replace",
-                    index=False
-                )
-            elif el.endswith('.json'):
-                pd_json = pd.read_json(el)
-                pd_json.to_sql(
-                    name=f"{nom_du_table}_{self.date}".replace('-','_'),
-                    con= self.get_mysql_conn(),
-                    if_exists="replace",
-                    index=False
-                )
+        if len(fichiers) != 0:
+            for el in fichiers:
+                nom_du_table = self.extrait_nom(el)
+                if el.endswith('.csv'):
+                    pd_csv = pd.read_csv(el)
+                    pd_csv.to_sql(
+                        name= f"{nom_du_table}_{self.date}".replace('-','_'),   
+                        con= self.get_mysql_conn(),          
+                        if_exists="replace",       
+                        index=False                
+                    )
+                elif el.endswith('.xls'or '.xlsx'):
+                    pd_excel = pd.read_excel(el)
+                    pd_excel.to_sql(
+                        name=f"{nom_du_table}_{self.date}".replace('-','_'),
+                        con= self.get_mysql_conn(),
+                        if_exists="replace",
+                        index=False
+                    )
+                elif el.endswith('.json'):
+                    pd_json = pd.read_json(el)
+                    pd_json.to_sql(
+                        name=f"{nom_du_table}_{self.date}".replace('-','_'),
+                        con= self.get_mysql_conn(),
+                        if_exists="replace",
+                        index=False
+                    )
+        else:
+            print('y a pas de fichier')
 
 ### -------------------Injection MongoDB----------------------------- ####
 
     def creer_collection(self):
         fichiers = self.liens_des_fichiers()
-        for el in fichiers:
-            nom_de_la_collection = self.extrait_nom(el) # chaque fichier est une collection
-            collection = self.get_mongoCon()[f"{nom_de_la_collection}_{self.date}".replace('-','_')]
-            # stockage des fichier csv 
-            if el.endswith('.csv'):
-                pd_csv = pd.read_csv(el)
-                donnees = pd_csv.to_dict(orient='records')
-                collection.insert_many(donnees)
-            # stockage des fichiers excel 
-            elif el.endswith('.xls'or '.xlsx'):
-                pd_excel = pd.read_excel(el)
-                donnees = pd_excel.to_dict(orient='records')
-                collection.insert_many(donnees)
-            # Stockage des fichiers json 
-            elif el.endswith('.json'):
-                pd_json = pd.read_json(el)            
-                donnees = pd_json.to_dict(orient='records')
-                collection.insert_many(donnees)
+        if len(fichiers) !=0:
+            for el in fichiers:
+                nom_de_la_collection = self.extrait_nom(el) # chaque fichier est une collection
+                collection = self.get_mongoCon()[f"{nom_de_la_collection}_{self.date}".replace('-','_')]
+                # stockage des fichier csv 
+                if el.endswith('.csv'):
+                    pd_csv = pd.read_csv(el)
+                    donnees = pd_csv.to_dict(orient='records')
+                    collection.insert_many(donnees)
+                # stockage des fichiers excel 
+                elif el.endswith('.xls'or '.xlsx'):
+                    pd_excel = pd.read_excel(el)
+                    donnees = pd_excel.to_dict(orient='records')
+                    collection.insert_many(donnees)
+                # Stockage des fichiers json 
+                elif el.endswith('.json'):
+                    pd_json = pd.read_json(el)            
+                    donnees = pd_json.to_dict(orient='records')
+                    collection.insert_many(donnees)
+        else: 
+            print('Aucun fichier ')

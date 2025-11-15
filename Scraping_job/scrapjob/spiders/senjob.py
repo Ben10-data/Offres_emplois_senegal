@@ -33,7 +33,7 @@ class SenjobSpider(scrapy.Spider):
                         poste = emploi.css("td div a span.offre_title span.offre_title::text")[0].get()
                         if not poste : 
                             poste = emploi.css("td div a::text")[0].get()
-
+                        senjob_items['lien'] = emploi.css("td div a::text")[0].get()
                         senjob_items['poste']= poste
                         senjob_items['region'] = emploi.css("td span.green_text_normal::text")[1].get()
                         senjob_items['date_de_publication'] = emploi.css("td span.green_text_normal::text")[0].get()

@@ -9,7 +9,7 @@ class EmploisenegalSpider(scrapy.Spider):
     allowed_domains = ["www.emploisenegal.com"]
     start_urls = ["https://www.emploisenegal.com/recherche-jobs-senegal"]
 
- 
+
     # imitation d'un navigateur web 
     def start_requests(self):
         yield scrapy.Request(
@@ -45,9 +45,9 @@ class EmploisenegalSpider(scrapy.Spider):
             # Nous allons utiliser un boucle, au cas ou on a pas des info supplementaire
             if mini_lien_du_formation:
                yield response.follow(lien_absolute,
-                              headers = {
+                            headers = {
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                                  "(KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+                                "(KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
                 },
                 callback=self.parseDetail, meta = {"item":emploi_item })
             
@@ -63,7 +63,7 @@ class EmploisenegalSpider(scrapy.Spider):
                 url=url_suivante,
                 headers={
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                                  "(KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+                                "(KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
                 },
                 callback=self.parse
             )
@@ -81,4 +81,3 @@ class EmploisenegalSpider(scrapy.Spider):
         else:
             emploi_item['formation'] = None 
         yield emploi_item
-

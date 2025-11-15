@@ -20,7 +20,7 @@ ADDONS = {}
 #USER_AGENT = "scrapjob (+http://www.yourdomain.com)"
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Concurrency and throttling settings
 #CONCURRENT_REQUESTS = 16
@@ -51,6 +51,15 @@ AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0
 #    "Accept-Language": "en",
 #}
 
+DEFAULT_REQUEST_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/119.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Language": "fr-FR,fr;q=0.9,en;q=0.8",
+    "Referer": "https://www.google.com/",
+}
+
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
@@ -63,10 +72,29 @@ AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0
 #    "scrapjob.middlewares.ScrapjobDownloaderMiddleware": 543,
 #}
 
-DOWNLOADER_MIDDLEWARES = {
-   #"scrapjob.middlewares.RandomUserAgentMiddleware": 543,
-   "scrapy.downloadermiddlewares.useragent.UserAgentMiddleware": None,
+# DOWNLOADER_MIDDLEWARES = {
+#     #"scrapjob.middlewares.RandomUserAgentMiddleware": 543,
+#     "scrapy.downloadermiddlewares.useragent.UserAgentMiddleware": None,
+# }
+
+# DOWNLOADER_MIDDLEWARES = {
+#     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
+#     'scrapy_cloudflare_middleware.middlewares.CloudFlareMiddleware': 560,
+# }
+
+# --- scrapy-playwright ---
+# DOWNLOAD_HANDLERS = {
+#     "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+#     "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+# }
+
+TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
+
+PLAYWRIGHT_LAUNCH_OPTIONS = {
+    "headless": True,
+    "timeout": 60 * 1000,
 }
+
 
 
 # Enable or disable extensions
@@ -74,6 +102,10 @@ DOWNLOADER_MIDDLEWARES = {
 #EXTENSIONS = {
 #    "scrapy.extensions.telnet.TelnetConsole": None,
 #}
+
+AUTOTHROTTLE_ENABLED = True
+DOWNLOAD_DELAY = 3
+
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
@@ -103,3 +135,11 @@ ITEM_PIPELINES = {
 #HTTPCACHE_STORAGE = "scrapy.extensions.httpcache.FilesystemCacheStorage"
 
 # Set settings whose default value is deprecated to a future-proof value
+
+# FEEDS = {
+#     "/opt/airflow/Dossiers_json_excel_csv/donnes_des_json/%(name)s.json": {
+#         "format": "json",
+#         "encoding": "utf8",
+#         "overwrite": True,   
+#     }
+# }

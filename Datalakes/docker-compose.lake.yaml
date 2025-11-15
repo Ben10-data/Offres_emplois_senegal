@@ -119,6 +119,9 @@ services:
       dockerfile: Dockerfile.spark
     container_name: spark-client
     command: bash
+    ports:
+      - "7077:7077"
+      - "8889:8888"
     stdin_open: true
     tty: true
     environment:
@@ -127,6 +130,7 @@ services:
     volumes:
       - ../Spark/app:/opt/spark/app
       - ../Spark/app/data:/data
+      - ../Spark/ssh:/home/spark
       - ./hadoop-config:/opt/hadoop/etc/hadoop
       - ../Spark/script-sparkshell:/home/spark
     depends_on:

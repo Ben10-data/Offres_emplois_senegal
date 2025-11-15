@@ -107,19 +107,6 @@ class ConnexionLake(ConnexionDB):
         return f'Datalake bien alimenté a partir de MongoDB a {datetime.now().ctime()}'
 
 
-        
-
-
-        
-
-
-
-
-    
-    
-    
-
-    
 
 
 
@@ -130,4 +117,9 @@ class ConnexionLake(ConnexionDB):
 
 
 
-    
+
+
+
+
+
+
