@@ -93,7 +93,6 @@ services:
        - ../Scraping_job:/opt/airflow/scrapjob:rw
        - ../src:/opt/airflow/src:rw
        - ../Dossiers_json_excel_csv:/opt/airflow/Dossiers_json_excel_csv
-       - ../Dossiers_json_excel_csv/json_fichiers:/opt/airflow/Dossiers_json_excel_csv/donnes_des_json:rw # stocker nos fichier json
        - /etc/localtime:/etc/localtime:ro
        - /Spark/airflow_ssh:/home/airflow/.ssh
 
@@ -135,3 +134,12 @@ services:
      networks:
        - offres_emplois_dakar
   
+
+
+### --------------------------  Probleme rencontré -------------------------- ###
+
+# Notre utilisation de Airflow avec le docker-compose a rencontré des problèmes liés aux permissions d'ecrire les logs 
+# Et pour resoudre ce probleme, nous avons du modifier les permissions des dossiers de logs en utilisant la commande suivante :
+            
+              # sudo chown -R 50000:50000 ../Airflow/logs
+              # sudo chmod -R 775 ../Airflow/logs
