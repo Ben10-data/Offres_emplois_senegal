@@ -208,3 +208,6 @@ print("--------------------------tout esst carree-----------------------------")
 
 
 spark.stop()
+
+del spark
+print('la session spark est arretée et supprimée')
