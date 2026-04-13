@@ -41,6 +41,7 @@ services:
        - ../Airflow/logs:/opt/airflow/logs
        - ../Scraping_job:/opt/airflow/scrapjob:rw
        - ../Dossiers_json_excel_csv:/opt/airflow/Dossiers_json_excel_csv
+       - ../Spark/app:/opt/airflow/app:rw
        - ../Dossiers_json_excel_csv/json_fichiers:/opt/airflow/Dossiers_json_excel_csv/donnes_des_json:rw # stocker nos fichier json
        - ../src:/opt/airflow/src:rw
        - /etc/localtime:/etc/localtime:ro
@@ -92,6 +93,7 @@ services:
        - ./logs:/opt/airflow/logs
        - ../Scraping_job:/opt/airflow/scrapjob:rw
        - ../src:/opt/airflow/src:rw
+       - ../Spark/app:/opt/airflow/app:rw
        - ../Dossiers_json_excel_csv:/opt/airflow/Dossiers_json_excel_csv
        - /etc/localtime:/etc/localtime:ro
        - /Spark/airflow_ssh:/home/airflow/.ssh
@@ -119,6 +121,7 @@ services:
        - ./logs:/opt/airflow/logs
        - ../Scraping_job:/opt/airflow/scrapjob:rw
        - ../src:/opt/airflow/src:rw
+       - ../Spark/app:/opt/airflow/app:rw
        - ../Dossiers_json_excel_csv:/opt/airflow/Dossiers_json_excel_csv
        - ../Dossiers_json_excel_csv/json_files:/opt/airflow/donnes_des_json:rw # stocker nos fichier json
        - /etc/localtime:/etc/localtime:ro

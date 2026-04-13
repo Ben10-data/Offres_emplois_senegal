@@ -11,7 +11,10 @@ HDFS-SITE.XML_dfs.webhdfs.enabled=true
 HDFS-SITE.XML_dfs.permissions.enabled=false
 HDFS-SITE.XML_dfs.namenode.datanode.registration.ip-hostname-check=false
 HDFS-SITE.XML_dfs.namenode.name.dir=/tmp/hadoop-root/dfs/name
-HDFS-SITE.XML_dfs.datanode.data.dir=/tmp/hadoop-root/dfs/data
+HDFS-SITE.XML_dfs.datanode.data.dir=/tmp/hadoop/dfs/data
+DFS-SITE.XML_dfs.namenode.safemode.threshold-pct=0
+DFS-SITE.XML_dfs.namenode.safemode.min.datanodes=0
+
 
 # MAPRED-SITE.XML
 MAPRED-SITE.XML_mapreduce.framework.name=yarn

@@ -1,4 +1,4 @@
-#!/home/ben/Bureau/Pre-production/Offres_emplois_senegal/.benv/bin/python3.11
+#!/home/ben/Bureau/Pre-production/Offres_emplois_senegal/.benv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

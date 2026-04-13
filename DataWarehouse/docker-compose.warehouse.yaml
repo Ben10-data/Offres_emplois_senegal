@@ -7,6 +7,8 @@ services:
     container_name: postgres_warehouse
     ports:
       - "${Port_externe_Warehouse}:5432"
+    env_file:
+      - .env
     environment:
           POSTGRES_USER: ${Post_user_warehouse}
           POSTGRES_PASSWORD: ${Post_pwd_warehouse}

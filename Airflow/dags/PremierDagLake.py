@@ -106,11 +106,16 @@ with DAG(dag_id="Premier_dag",
 
     etape_warehouse = SparkSubmitOperator(
         task_id="alimentation_datawarehouse",
-        application="/opt/spark/app/monscript.py",
+        application="/opt/airflow/app/scripts/monscript.py",
         conn_id="spark_default",
-        conf={
-            "spark.yarn.submit.waitAppCompletion": "true"
+        verbose=True,
+        env_vars={
+        "HADOOP_CONF_DIR": "/opt/hadoop/etc/hadoop",
+        "YARN_CONF_DIR": "/opt/hadoop/etc/hadoop"
         }
+        # conf={
+        #     "spark.yarn.submit.waitAppCompletion": "true"
+        # }
     )
 
 
