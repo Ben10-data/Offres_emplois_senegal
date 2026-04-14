@@ -105,7 +105,7 @@ with DAG(dag_id="Premier_dag",
     
 
     etape_warehouse = SparkSubmitOperator(
-        task_id="alimentation_datawarehouse",
+        task_id="alimentation_warehouse",
         application="/opt/airflow/app/scripts/monscript.py",
         conn_id="spark_default",
         verbose=True,

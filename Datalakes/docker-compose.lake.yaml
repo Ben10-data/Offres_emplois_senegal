@@ -11,16 +11,16 @@ services:
     container_name: namenodeJob
     hostname: namenode
     ## si le dossier name n'a pas d'images, on formate et ensuite on lance le namenode
-    command: ["bash", "-c", "if [ ! -d /tmp/hadoop/dfs/name/current ]; then hdfs namenode -format -nonInteractive; fi && hdfs namenode -fsck -format || true && hdfs namenode"]
+    command: ["bash", "-c", "if [ ! -d /tmp/hadoop-root/dfs/name/current ]; then hdfs namenode -format -nonInteractive; fi && hdfs namenode -fsck -format || true && hdfs namenode"]
     ports:
       - "9870:9870"  # Port du web de hadoop ou du nameNode
       - "8020:8020" 
     env_file:
       - ../Datalakes/config
     environment:
-      ENSURE_NAMENODE_DIR: "/tmp/hadoop/dfs/name"
+      ENSURE_NAMENODE_DIR: "/tmp/hadoop-root/dfs/name"
     volumes:
-      - ./namenode:/tmp/hadoop/dfs/name  # nos metadonnées sont exposé a namenode
+      - ./namenode:/tmp/hadoop-root/dfs/name  # nos metadonnées sont exposé a namenode
       - ./logs:/logs # exposé des logs en hote
     networks:
       - offres_emplois_dakar
@@ -40,7 +40,7 @@ services:
     env_file:
       - ../Datalakes/config
     volumes:
-      - ./data_node1:/tmp/hadoop/dfs/data #données 
+      - ./data_node1:/tmp/hadoop-root/dfs/data #données 
       - ./logs:/logs
     depends_on:
       - namenode
@@ -60,7 +60,7 @@ services:
     env_file:
       - ../Datalakes/config
     volumes:
-      - ./data_node2:/tmp/hadoop/dfs/data #données 
+      - ./data_node2:/tmp/hadoop-root/dfs/data #données 
       - ./logs:/logs
     depends_on:
       - namenode
