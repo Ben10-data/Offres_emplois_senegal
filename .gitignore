@@ -27,6 +27,16 @@ zenML/src/tests/test1.ipynb
 Dash/mlops.py
 Dash/__pycache__
 zenML/src/__pycache__
+.env
+Airflow/.env
+basesDeDonnees/.env
+DataWarehouse/.env
+
+
+
+
+
+
 
 
 
