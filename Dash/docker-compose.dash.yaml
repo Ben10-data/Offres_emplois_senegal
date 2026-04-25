@@ -19,3 +19,4 @@ services:
       retries: 3
     networks:
       - offres_emplois_dakar
+    command: ["python", "app.py"]

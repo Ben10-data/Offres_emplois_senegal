@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+zenml==0.94.2
+joblib 
+sentence-transformers 
+torch 
+scikit-learn 
+pandas 
+numpy

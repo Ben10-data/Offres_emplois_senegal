@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    container_name: fastapi_container
+    ports:
+      - "8057:8000"
+    volumes:
+      - ./app:/app/app
+      - ../zenML/src:/app/src:rw
+    
+    networks:
+      - offres_emplois_dakar
+
+    restart: always
