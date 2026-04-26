@@ -17,13 +17,13 @@ except Exception as e:
     model_tfd = None
 
 
-a = model_mini.recommend("Python java Machine Learning SQL DBT html postgresql\
-   css\
-   mongodb\
-   mysql\
-   javascript", "Dakar", 0
-   )
-b = model_tfd.predict('JAva', "Dakar")
+# a = model_mini.recommend("Python java Machine Learning SQL DBT html postgresql\
+#    css\
+#    mongodb\
+#    mysql\
+#    javascript", "Dakar", 0
+#    )
+# b = model_tfd.predict('JAva', "Dakar")
 
 
 # from fastapi import FastAPI, 
