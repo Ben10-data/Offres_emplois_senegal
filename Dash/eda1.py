@@ -14,8 +14,8 @@ from connexion_warehouse import Visualisation
 
 def load_eda_data():
     viz = Visualisation(
-        host="postgres_warehouse", port=5432,
-        database="datawarehouse", user="admin", password="admin_pwd",
+        host="dpg-d7n2vd1kh4rs73b028eg-a", port=5432,
+        database="offres_emploi_postgres_id4c", user="offres_emploi_postgres_id4c_user", password="b3HTXg7CxbbMRfeafdVxeJxNJSPa3tkv",
     )
     df_new = viz.get_data("offres_emploi_new").copy()
     df_ml  = viz.get_data("offres_emploi_ml")
