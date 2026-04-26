@@ -1,10 +1,16 @@
 from fastapi import FastAPI, HTTPException
 import joblib
 from pydantic import BaseModel
+import os 
+
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_DIR = os.path.join(BASE_DIR, "model_sauvegarde")
+
 
 try:
-    model_mini = joblib.load("src/model_sauvegarde/model_minibert.joblib")
-    model_tfd = joblib.load("src/model_sauvegarde/model_tfi.joblib")
+    model_mini = joblib.load(os.path.join(MODEL_DIR, "model_minibert.joblib"))
+    model_tfd = joblib.load(os.path.join(MODEL_DIR, "model_tfi.joblib"))
 except Exception as e:
     print("Erreur chargement modèles:", e)
     model_mini = None
