@@ -79,7 +79,7 @@ def create_sidebar():
                 
             ]),
             
-            html.Hr(className="border-secondary"),
+          #  html.Hr(className="border-secondary"),
             
             # Footer
             html.Div([
