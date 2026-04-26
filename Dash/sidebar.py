@@ -37,6 +37,7 @@ def create_sidebar():
                 html.Div([
                     html.I(className="bi bi-speedometer2 me-3", style={"fontSize": "1.2rem"}),
                     html.Span("Nos tableaux de bord"),
+
                 ], className="sidebar-item active",
                 style={
                     "padding": "12px 15px",
@@ -46,6 +47,35 @@ def create_sidebar():
                     "color": "#00f2fe",
                     "cursor": "pointer"
                 }),
+
+                html.Div([
+        html.Div(
+            "Imagine by Ben",
+            style={
+                "fontWeight": "bold",
+                "color": "#00f2fe",
+                "fontSize": "14px",
+                "textAlign": "center",
+                "marginBottom": "2px"
+            }
+        ),
+        html.Div(
+            "Ingénieur Data / MLOps",
+            style={
+                "fontSize": "12px",
+                "color": "#aaa",
+                "textAlign": "center"
+            }
+        ),
+    ],
+    style={
+        "padding": "15px 10px",
+        "marginTop": "10px",
+        "marginBottom": "10px",
+        "borderTop": "1px solid rgba(255,255,255,0.1)",
+        "borderBottom": "1px solid rgba(255,255,255,0.1)"
+    }),
+
                 
             ]),
             
