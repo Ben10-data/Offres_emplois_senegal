@@ -32,6 +32,7 @@ Airflow/.env
 basesDeDonnees/.env
 DataWarehouse/.env
 Airflow/logs
+Fastapi/app/__pycache__/
 
 
 
