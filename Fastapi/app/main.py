@@ -1,12 +1,15 @@
 from fastapi import FastAPI, HTTPException
-from zenml.client import Client
 import joblib
 from pydantic import BaseModel
 
+try:
+    model_mini = joblib.load("src/model_sauvegarde/model_minibert.joblib")
+    model_tfd = joblib.load("src/model_sauvegarde/model_tfi.joblib")
+except Exception as e:
+    print("Erreur chargement modèles:", e)
+    model_mini = None
+    model_tfd = None
 
-
-model_mini = joblib.load("/app/src/model_sauvegarde/model_minibert.joblib")
-model_tfd = joblib.load("/app/src/model_sauvegarde/model_tfi.joblib")
 
 a = model_mini.recommend("Python java Machine Learning SQL DBT html postgresql\
    css\

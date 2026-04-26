@@ -3,9 +3,9 @@ version: '3.8'
 # services:
 
 include:
-    #- ./Airflow/docker-compose.airflow.yaml
-    #- ./basesDeDonnees/docker-compose.databases.yaml
-    #- ./Datalakes/docker-compose.lake.yaml
+    - ./Airflow/docker-compose.airflow.yaml
+    - ./basesDeDonnees/docker-compose.databases.yaml
+    - ./Datalakes/docker-compose.lake.yaml
     - ./DataWarehouse/docker-compose.warehouse.yaml
     - ./Dash/docker-compose.dash.yaml
     - ./Fastapi/docker-compose.fast.yaml
