@@ -536,3 +536,90 @@ body { font-family: 'DM Sans', sans-serif !important; }
   font-family: 'DM Mono', monospace;
   gap: 10px;
 }
+
+/* responsivité */
+
+
+.sidebar-fixed {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: 280px;
+  padding: 20px 15px;
+  background: linear-gradient(135deg, rgba(15,20,30,0.95) 0%, rgba(10,15,25,0.98) 100%);
+  backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+}
+@media (max-width: 992px) {
+  .sidebar-fixed { display: none; }
+}
+
+.main-content {
+  margin-left: 280px;
+  padding: 25px;
+  margin-top: 4px;
+  background-color: #0b0c10;
+  min-height: 95vh;
+  transition: margin-left 0.3s ease;
+}
+@media (max-width: 992px) {
+  .main-content { margin-left: 0; padding: 15px; }
+}
+@media (max-width: 576px) {
+  .main-content { padding: 10px; }
+}
+
+
+html, body { overflow-x: hidden; max-width: 100%; }
+
+@media (max-width: 992px) {
+  .eda-root, .comp-root, .match-root { padding: 20px 16px; }
+}
+
+@media (max-width: 576px) {
+  .eda-root, .comp-root, .match-root { padding: 14px 10px; }
+
+  .eda-header, .comp-header, .match-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .eda-header-title, .comp-header-title, .match-header-title { font-size: 18px; }
+  .badge-live { align-self: flex-start; }
+
+  .kpi-outer { padding: 16px; }
+  .kpi-value { font-size: 22px; }
+
+  .s-card { padding: 16px; }
+  .profile-panel { padding: 16px; }
+
+  .score-number { font-size: 36px; }
+
+  .offres-grid { grid-template-columns: 1fr; }
+
+  .stat-row { flex-direction: column; }
+  .stat-pill { min-width: 100%; }
+
+  .dash-cell, .dash-header {
+    font-size: 10px !important;
+    padding: 6px 8px !important;
+  }
+}
+
+/* Bubble chart : scroll horizontal contrôlé sur mobile (voir competences.py) */
+.bubble-scroll-window {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 580px;
+}
+@media (max-width: 576px) {
+  .bubble-scroll-window .js-plotly-plot {
+    min-width: 500px;
+  }
+}
+
+@media (max-width: 992px) {
+  .sidebar-fixed { display: none !important; }
+}

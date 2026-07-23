@@ -8,13 +8,11 @@ import dash_bootstrap_components as dbc
 from composant_reutisable import kpi_card, chart_card, kpi_card_glacial
 from connexion_warehouse import Visualisation
 
-
 # =============================================================================
 #  CHARGEMENT & PRÉTRAITEMENT DES DONNÉES
 # =============================================================================
 
 def load_eda_data():
-    """Charge et prépare toutes les données nécessaires à la page EDA"""
     viz = Visualisation(
         host="postgres_warehouse", port=5432,
         database="datawarehouse", user="admin", password="admin_pwd"
@@ -24,19 +22,15 @@ def load_eda_data():
     df_ml = viz.get_data("offres_emploi_ml")
     df = viz.get_data("offres_emploi").copy()
    
-    
-    # Dates
     df["date_de_publication"] = pd.to_datetime(df["date_de_publication"])
     now = pd.Timestamp.now()
     first_current = now.replace(day=1)
     first_prev = (first_current - pd.DateOffset(months=1)).replace(day=1)
     last_prev = first_current - pd.DateOffset(days=1)
     
-    # Filtres mensuels
     current_mask = (df["date_de_publication"] >= first_current) & (df["date_de_publication"] <= now)
     prev_mask = (df["date_de_publication"] >= first_prev) & (df["date_de_publication"] <= last_prev)
     
-    # KPIs de base
     kpis = {
         "nombre_poste": df["poste"].count(),
         "nombre_entreprises": df["entreprise"].nunique(),
@@ -52,13 +46,11 @@ def load_eda_data():
     
     return df, df_ml, kpis, df_new
 
-
 # =============================================================================
 #  FONCTIONS DE CRÉATION DES GRAPHIQUES
 # =============================================================================
 
 def create_evolution_chart(df):
-    """Graphique d'évolution mensuelle des offres"""
     df_ev = df[['date_de_publication', 'poste']].copy()
     df_ev['mois'] = df_ev['date_de_publication'].dt.to_period('M')
     agg = df_ev.groupby('mois').size().reset_index(name='Offres')
@@ -80,9 +72,7 @@ def create_evolution_chart(df):
     )
     return fig
 
-
 def create_pie_chart(labels, values, colors, title_hint=""):
-    """Factory pour les graphiques en donut"""
     fig = go.Figure(go.Pie(
         labels=labels, values=values, hole=0.62,
         marker=dict(colors=colors, line=dict(width=0)),
@@ -96,9 +86,7 @@ def create_pie_chart(labels, values, colors, title_hint=""):
     )
     return fig
 
-
 def create_horizontal_bar(df, x_col, y_col, colorscale, height=360):
-    """Barres horizontales stylisées"""
     fig = go.Figure(go.Bar(
         x=df[x_col], y=df[y_col], orientation='h',
         text=df[x_col], textposition='outside',
@@ -115,41 +103,30 @@ def create_horizontal_bar(df, x_col, y_col, colorscale, height=360):
     )
     return fig
 
-
 def prepare_chart_data(df, df_ml, df_new):
-    """Prépare les DataFrames pour chaque graphique"""
-    # Skills
     skills = df["competence"].explode().dropna()
     df_skills = skills.value_counts().head(21).reset_index().rename(columns={'index': 'competence', 'count': 'Count'})
     
-    # Régions
     df_region = df_ml["region"].value_counts().head(10).reset_index().rename(columns={'index': 'region', 'count': 'Count'})
+    df_contract = df_ml["contrat"].value_counts().reset_index().rename(columns={'index': 'contrat', 'count': 'Count'})
     
-    # Contrats
-    df_contract = df_ml["contrat"].value_counts().reset_index().rename(columns={'index': 'Contrat', 'count': 'Count'})
-    
-    # Études
     etudes = df["niveau_etude"].explode().dropna().str.split(" - ").explode()
     df_etude = etudes.value_counts().head(25).reset_index().rename(columns={'index': 'niveau_etude', 'count': 'Count'})
     
-    # Entreprises
     df_companies = df["entreprise"].value_counts().reset_index().head(10).rename(columns={'index': 'entreprise', 'count': 'count'})
     
-    # Données récentes
     df_new["region_"] = df_new["region"].apply(lambda x: ", ".join(x) if isinstance(x, list) else x)
     df_new["contracts"] = df_new["contrat"].apply(lambda x: ", ".join(x) if isinstance(x, list) else x)
     df_recent = df_new[["poste", "entreprise", "lien","region_","contracts", "date_de_publication"]] \
-     .sort_values('date_de_publication', ascending=False) \
-     .head(500)
+     .sort_values('date_de_publication', ascending=False).head(500)
     
     return {
         'skills': df_skills, 'region': df_region, 'contract': df_contract,
-        'etude': df_etude, 'companies': df_companies , 'recent': df_recent
+        'etude': df_etude, 'companies': df_companies, 'recent': df_recent
     }
-    # 
 
 # =============================================================================
-# 🧱 COMPOSANTS UI RÉUTILISABLES
+#  COMPOSANTS UI (HYBRIDE : MACHINE = COMPACT / TÉLÉPHONE = EMPILÉ)
 # =============================================================================
 
 def _kpi_card(color, icon, label, value, delta, delta_class="delta-up"):
@@ -160,9 +137,9 @@ def _kpi_card(color, icon, label, value, delta, delta_class="delta-up"):
             html.Div(value, className="kpi-value"),
             html.Div(html.Span(delta, className=delta_class), className="kpi-delta"),
         ], className=f"kpi-outer k-{color}"),
-        width=3,
+        # ← ICI : 12 (téléphone), 6 (tablette), 3 (machine/desktop comme ton code original)
+        width={"size": 12, "sm": 6, "md": 6, "lg": 3},
     )
-
 
 def _chart_card(title, hint, graph_component):
     return html.Div([
@@ -171,14 +148,12 @@ def _chart_card(title, hint, graph_component):
         graph_component,
     ], className="s-card")
 
-
 def _dcc_graph(fig, height=240):
-    return dcc.Graph(figure=fig, config={"displayModeBar": False}, style={"height": f"{height}px"})
-
-
-# =============================================================================
-# 🎨 PALETTES DE COULEURS
-# =============================================================================
+    return dcc.Graph(
+        figure=fig,
+        config={"displayModeBar": False, "responsive": True},
+        style={"height": f"{height}px", "width": "100%"},
+    )
 
 PALETTES = {
     'contrats': ['#6366F1', '#8B5CF6', '#A78BFA', '#C4B5FD', '#DDD6FE'],
@@ -189,48 +164,24 @@ PALETTES = {
     'companies': [[0, '#312E81'], [0.5, '#6366F1'], [1, '#A5B4FC']],
 }
 
-
 # =============================================================================
-# 🚀 FONCTION PRINCIPALE : CRÉATION DE LA PAGE
+# 🚀 FONCTION PRINCIPALE
 # =============================================================================
 
 def create_eda_page():
-    """Créer la page d'analyse exploratoire"""
-    # Chargement des données
     df, df_ml, kpis, df_new = load_eda_data()
     charts_data = prepare_chart_data(df, df_ml, df_new)
     
-    # Création des graphiques
     fig_evolution = create_evolution_chart(df)
-    fig_contract = create_pie_chart(
-        labels=charts_data['contract']['contrat'],
-        values=charts_data['contract']['Count'],
-        colors=PALETTES['contrats']
-    )
-    fig_etude = create_pie_chart(
-        labels=charts_data['etude']['niveau_etude'],
-        values=charts_data['etude']['Count'],
-        colors=PALETTES['etude']
-    )
-    fig_skills = create_horizontal_bar(
-        charts_data['skills'], 'Count', 'competence',
-        colorscale=PALETTES['skills'], height=420
-    )
-    fig_companies = create_horizontal_bar(
-        charts_data['companies'], 'count', 'entreprise',
-        colorscale=PALETTES['companies'], height=360
-    )
-    fig_region = create_pie_chart(
-        labels=charts_data['region']['region'],
-        values=charts_data['region']['Count'],
-        colors=PALETTES['region']
-    )
+    fig_contract = create_pie_chart(charts_data['contract']['contrat'], charts_data['contract']['Count'], PALETTES['contrats'])
+    fig_etude = create_pie_chart(charts_data['etude']['niveau_etude'], charts_data['etude']['Count'], PALETTES['etude'])
+    fig_skills = create_horizontal_bar(charts_data['skills'], 'Count', 'competence', colorscale=PALETTES['skills'], height=420)
+    fig_companies = create_horizontal_bar(charts_data['companies'], 'count', 'entreprise', colorscale=PALETTES['companies'], height=360)
+    fig_region = create_pie_chart(charts_data['region']['region'], charts_data['region']['Count'], PALETTES['region'])
     
-    # Calcul delta KPI
     delta_eval = f"↑ {kpis['evaluation']:.1f}% vs mois passé" if kpis['evaluation'] > 0 else f"{kpis['evaluation']:.1f}%"
     
     return html.Div([
-        # ── Header ──────────────────────────────────────────────────
         html.Div([
             html.Div([
                 html.Div("Marché de l'emploi · Sénégal", className="eda-header-title"),
@@ -239,46 +190,32 @@ def create_eda_page():
             html.Span("● en direct", className="badge-live"),
         ], className="eda-header"),
 
-        # ── KPI row ─────────────────────────────────────────────────
         dbc.Row([
-            _kpi_card("indigo", "💼", "Offres d'emploi",
-                      f"{kpis['nombre_poste']:,}", delta_eval),
-            _kpi_card("cyan", "🏢", "Entreprises",
-                      f"{kpis['nombre_entreprises']:,}", "↑ 6.2% nouvelles ce mois"),
-            _kpi_card("violet", "⚡", "Compétences uniques",
-                      f"{kpis['nombre_competences']:,}", "↑ 15.3% vs période préc."),
-            _kpi_card("emerald", "📍", "Régions actives",
-                      f"{kpis['nombre_regions']:,}", "stable vs mois passé", delta_class="delta-zero"),
+            _kpi_card("indigo", "💼", "Offres d'emploi", f"{kpis['nombre_poste']:,}", delta_eval),
+            _kpi_card("cyan", "🏢", "Entreprises", f"{kpis['nombre_entreprises']:,}", "↑ 6.2% nouvelles ce mois"),
+            _kpi_card("violet", "⚡", "Compétences uniques", f"{kpis['nombre_competences']:,}", "↑ 15.3% vs période préc."),
+            _kpi_card("emerald", "📍", "Régions actives", f"{kpis['nombre_regions']:,}", "stable vs mois passé", delta_class="delta-zero"),
         ], className="g-3 mb-3"),
 
-        # ── Évolution + Répartition géo ─────────────────────────────
+        # ← ICI : lg=7/5 sur machine, 12/12 empilé sur téléphone
         dbc.Row([
-            dbc.Col(_chart_card("Évolution mensuelle des offres", "offres publiées par mois",
-                               _dcc_graph(fig_evolution, 220)), width=7),
-            dbc.Col(_chart_card("Répartition géographique", "top 10 régions",
-                               _dcc_graph(fig_region, 220)), width=5),
+            dbc.Col(_chart_card("Évolution mensuelle des offres", "offres publiées par mois", _dcc_graph(fig_evolution, 220)), width={"size": 12, "lg": 7}),
+            dbc.Col(_chart_card("Répartition géographique", "top 10 régions", _dcc_graph(fig_region, 220)), width={"size": 12, "lg": 5}),
         ], className="g-3 mb-3"),
 
-        # ── Contrats + Études ────────────────────────────────────────
+        # ← ICI : md=6/6 sur tablette+, 12/12 empilé sur téléphone
         dbc.Row([
-            dbc.Col(_chart_card("Types de contrats", "répartition par type",
-                               _dcc_graph(fig_contract, 230)), width=6),
-            dbc.Col(_chart_card("Niveau d'études requis", "répartition des offres",
-                               _dcc_graph(fig_etude, 230)), width=6),
+            dbc.Col(_chart_card("Types de contrats", "répartition par type", _dcc_graph(fig_contract, 230)), width={"size": 12, "md": 6}),
+            dbc.Col(_chart_card("Niveau d'études requis", "répartition des offres", _dcc_graph(fig_etude, 230)), width={"size": 12, "md": 6}),
         ], className="g-3 mb-3"),
 
-        # ── Top compétences ──────────────────────────────────────────
         dbc.Row([
-            dbc.Col(_chart_card("Top 20 compétences demandées",
-                               "par nombre d'offres · toutes catégories",
-                               _dcc_graph(fig_skills, 420)), width=12),
+            dbc.Col(_chart_card("Top 20 compétences demandées", "par nombre d'offres · toutes catégories", _dcc_graph(fig_skills, 420)), width=12),
         ], className="g-3 mb-3"),
 
-        # ── Top entreprises + Insights ───────────────────────────────
+        # ← ICI : lg=8/4 sur machine, 12/12 empilé sur téléphone
         dbc.Row([
-            dbc.Col(_chart_card("Top entreprises qui recrutent",
-                               "par volume d'offres publiées",
-                               _dcc_graph(fig_companies, 360)), width=8),
+            dbc.Col(_chart_card("Top entreprises qui recrutent", "par volume d'offres publiées", _dcc_graph(fig_companies, 360)), width={"size": 12, "lg": 8}),
             dbc.Col(
                 html.Div([
                     html.Div("Insights clés", className="s-card-title"),
@@ -300,10 +237,10 @@ def create_eda_page():
                         ]
                     ],
                 ], className="s-card"),
-                width=4),
+                width={"size": 12, "lg": 4}
+            ),
         ], className="g-3 mb-3"),
 
-        # ── Table récente ────────────────────────────────────────────
         html.Div([
             html.Div("Offres d'emploi récentes", className="s-card-title"),
             html.Div(f"{min(500, len(charts_data['recent']))} dernières offres · triées par date", className="s-card-hint"),
@@ -311,23 +248,23 @@ def create_eda_page():
                 data=charts_data['recent'].head(500).to_dict('records'),
                 columns=[{"name": col, "id": col} for col in charts_data['recent'].columns],
                 page_size=12, page_action='native', sort_action='native',
-                style_table={'overflowX': 'auto'},
+                style_table={'overflowX': 'auto', 'width': '100%'},
                 style_header={
-                    'backgroundColor': '#0E0E16', 'color': '#64748B', 'fontWeight': '500',
+                    'backgroundColor': '#0E0E16', 'color': '#94A3B8', 'fontWeight': '500',
                     'fontSize': '10px', 'textTransform': 'uppercase', 'letterSpacing': '0.08em',
                     'fontFamily': 'DM Mono, monospace', 'borderBottom': '0.5px solid rgba(148,163,184,0.1)', 'border': 'none',
+                    'whiteSpace': 'normal', 'height': 'auto', 'minWidth': '100px',
                 },
                 style_cell={
-                    'backgroundColor': '#16161F', 'color': "#676697", 'border': 'none',
+                    'backgroundColor': '#16161F', 'color': "#CBD5E1", 'border': 'none',
                     'borderBottom': '0.5px solid rgba(148,163,184,0.06)',
                     'fontFamily': 'DM Sans, sans-serif', 'fontSize': '12px', 'padding': '10px 14px',
+                    'whiteSpace': 'normal', 'height': 'auto', 'minWidth': '100px',
                 },
                 style_data_conditional=[
                     {'if': {'row_index': 'odd'}, 'backgroundColor': 'rgba(255,255,255,0.012)'},
-                    {'if': {'state': 'selected'}, 'backgroundColor': '#000000','border': '0.5px solid rgba(99,102,241,0.3)','color': "#1B334D"}
-                   # {'if': {'state': 'selected'}, 'backgroundColor': '#000000', 'border': '0.5px solid rgba(225,102,255,0.3)'}
+                    {'if': {'state': 'selected'}, 'backgroundColor': '#000000', 'border': '0.5px solid rgba(99,102,241,0.3)', 'color': "#E2E8F0"}
                 ],
             ),
         ], className="s-card"),
-
     ], className="eda-root")

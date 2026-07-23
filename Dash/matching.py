@@ -16,7 +16,7 @@ df_skills_top = (
     .rename(columns={"competence": "Skill", "count": "Count"})
 )
 
-###------------------Données regions -------------------------------------
+# ── Données regions ────────────────────────────────────────────────────────────────────
 
 data_region = lecture("offres_emploi_ml").copy()
 df_region = data_region["region"].dropna().value_counts().reset_index()
@@ -49,14 +49,14 @@ def build_offre_card(i, poste, region, score, missing_skills):
 
     return html.Div([
         html.Div(f"#{i+1}", className="offre-rank"),
-        html.Div(poste, className="offre-poste"),
-        html.Div(["📍 ", region], className="offre-region"),
+        html.Div(poste, className="offre-poste", style={"wordBreak": "break-word"}), # ← Évite le débordement
+        html.Div(["📍 ", region], className="offre-region", style={"wordBreak": "break-word"}),
 
         html.Div([
             html.Div([
-                html.Span("score", style={"color": "#475569"}),
+                html.Span("score", style={"color": "#94A3B8"}), # ← Légèrement plus clair pour la lisibilité
                 html.Span(f"{pct}%  ·  {score_label(score)}",
-                          style={"color": color, "fontWeight": "500"}),
+                          style={"color": color, "fontWeight": "600"}),
             ], className="score-bar-header"),
             html.Div(
                 html.Div(className="score-bar-fill", style={
@@ -147,7 +147,12 @@ def create_matching_page():
                         options=[{"label": s, "value": s} for s in ALL_SKILLS],
                         multi=True,
                         placeholder="Ex : Python, SQL, Docker…",
-                        style={"backgroundColor": "#0F0F17", "color": "#000"},
+                        style={
+                            "backgroundColor": "#0F0F17",
+                            "color": "#E2E8F0",  # ← CORRIGÉ : Texte clair sur fond sombre
+                            "border": "0.5px solid rgba(148,163,184,0.15)",
+                            "borderRadius": "10px"
+                        },
                     ),
                     html.Div(id="skills-str-preview", className="skills-preview",
                              children="aucune compétence sélectionnée"),
@@ -158,10 +163,15 @@ def create_matching_page():
                         id="match-region-dropdown",
                         options=[{"label": r, "value": r} for r in ALL_REGIONS],
                         placeholder="Ex : Dakar…",
-                        style={"backgroundColor": "#0F0F17", "color": "#000"},
+                        style={
+                            "backgroundColor": "#0F0F17",
+                            "color": "#E2E8F0",  # ← CORRIGÉ : Texte clair sur fond sombre
+                            "border": "0.5px solid rgba(148,163,184,0.15)",
+                            "borderRadius": "10px"
+                        },
                     ),
 
-                    # Expérience (champ ajouté — requis par l'API)
+                    # Expérience
                     html.Label("années d'expérience", className="field-label"),
                     dcc.Input(
                         id="match-experience-input",
@@ -189,9 +199,10 @@ def create_matching_page():
                         id="match-button",
                         className="launch-btn",
                         n_clicks=0,
+                        style={"width": "100%", "marginTop": "20px"} # ← S'assure que le bouton prend toute la largeur sur mobile
                     ),
                 ], className="profile-panel"),
-            ], width=4),
+            ], width={"size": 12, "lg": 4}), # ← RESPONSIVE : 12 sur mobile, 4 sur desktop
 
             # ── Panel résultats ──────────────────────────────────────
             dbc.Col([
@@ -208,7 +219,7 @@ def create_matching_page():
                         ], className="empty-state"),
                     ),
                 ),
-            ], width=8),
+            ], width={"size": 12, "lg": 8}), # ← RESPONSIVE : 12 sur mobile, 8 sur desktop
 
         ], className="g-3"),
 
@@ -232,7 +243,7 @@ def update_skills_preview(skills):
     Input("match-button", "n_clicks"),
     State("match-skills-dropdown", "value"),
     State("match-region-dropdown", "value"),
-    State("match-experience-input", "value"),   # ← nouveau State
+    State("match-experience-input", "value"),
     prevent_initial_call=True,
 )
 def run_matching(n_clicks, skills, region, experience):
@@ -242,7 +253,6 @@ def run_matching(n_clicks, skills, region, experience):
             html.Div("sélectionnez au moins une compétence", className="empty-text"),
         ], className="empty-state")
 
-    # Payload complet — champ experience maintenant inclus
     payload = {
         "competences": " ".join(skills),
         "region":      region or "Dakar",
