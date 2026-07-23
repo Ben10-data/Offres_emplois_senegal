@@ -1,4 +1,4 @@
-#  Projet Offres d’Emplois – Data Engineering
+#  Projet Offres d’Emplois – Analytics Engineering
 
 ## Structure du projet
 
