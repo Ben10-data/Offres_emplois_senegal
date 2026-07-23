@@ -278,7 +278,10 @@ def run_matching(n_clicks, skills, region, experience):
     except requests.exceptions.ConnectionError:
         return html.Div([
             html.Div("✕", className="empty-icon"),
-            html.Div("impossible de joindre l'API · vérifiez que le service est démarré",
+            html.Div("Le service du modele Mini-Bert est hors service pour le prototype, " \
+            "l' hebergement necessite un serveur payant. " \
+            "Pour le moment teste les autres fonctionnalites du dashboard et competences." \
+            " Merci pour votre comprehension.",
                      className="empty-text"),
         ], className="empty-state")
 
