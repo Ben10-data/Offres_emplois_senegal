@@ -6,24 +6,7 @@ from dash import html, dcc, Input, Output, callback, ctx
 import dash_bootstrap_components as dbc
 from lecture_table import lecture
 
-# ── Données ────────────────────────────────────────────────────────────────────
 
-# data = lecture("offres_emploi")
-
-# df_skills = (
-#     data["competence"]
-#     .value_counts()
-#     .reset_index()
-#     .rename(columns={"competence": "Skill", "count": "Count"})
-# )
-
-# df_evol_raw = (
-#     data
-#     .groupby(["competence", "date_de_publication"])
-#     .size()
-#     .reset_index(name="count")
-# )
-# df_evol_raw["date_de_publication"] = pd.to_datetime(df_evol_raw["date_de_publication"])
 
 data = lecture("offres_emploi_new")
 data = data.explode(column="competence")
@@ -66,10 +49,8 @@ def hex_to_rgb(hex_color):
 
 
 # ── Hauteur dynamique ─────────────────────────────────────────────────────────
-# 28px par ligne, minimum 400px — la figure est plus haute que la fenêtre visible,
-# le scroll CSS fait le reste.
-ROW_HEIGHT   = 10
-CHART_HEIGHT = max(400, N * ROW_HEIGHT)
+ROW_HEIGHT   = 25
+CHART_HEIGHT = max(450, N * ROW_HEIGHT)
 WINDOW_HEIGHT = 580   # hauteur de la fenêtre scrollable visible
 
 
@@ -129,7 +110,7 @@ def build_bubble_fig(selected_skill=None):
     # ── Trace 2 : labels texte (cliquables) ──────────────────────
     # On les place à droite du max de l'axe X (zone hors bulles)
     x_max   = float(df_skills["Count"].max())
-    x_label = x_max * 1.02   # juste à droite des bulles
+    x_label = x_max * 0.7   # juste à droite des bulles
 
     label_texts = df_skills.apply(
         lambda row: f"{row['Skill']}  {row['Count']:,}", axis=1
@@ -141,7 +122,7 @@ def build_bubble_fig(selected_skill=None):
         mode="text",
         text=label_texts,
         textfont=dict(
-            size=11,
+            size=14,
             color=label_colors,
             family="DM Sans, sans-serif",
         ),
@@ -433,11 +414,6 @@ def update_charts(selected_skill):
                 "background":  f"rgba({r},{g},{b},0.08)",
             },
         ),
-        # html.Div([
-        #     stat_pill("fréquence totale ", f"{freq:,}"),
-        #     stat_pill(" pic quotidien ",    f" {pic_jour:,}"),
-        #     stat_pill(" moy. / jour ",      f" {moy_jour}"),
-        # ], style={"display": "flex", "flexWrap": "wrap","gap": "10px", "marginBottom": "7px"}),
     chart_card(
     title="Analyse des compétences",
     figure=build_bubble_fig(selected_skill),

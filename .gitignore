@@ -32,6 +32,9 @@ Airflow/.env
 basesDeDonnees/.env
 DataWarehouse/.env
 Fastapi/app/__pycache__/
+Dash/__pycache__/competences.cpython-312.pyc
+Dash/mlops.py
+
 
 
 

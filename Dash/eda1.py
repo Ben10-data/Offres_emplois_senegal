@@ -1,4 +1,3 @@
-# eda1.py
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -8,9 +7,8 @@ import dash_bootstrap_components as dbc
 from composant_reutisable import kpi_card, chart_card, kpi_card_glacial
 from connexion_warehouse import Visualisation
 
-# =============================================================================
 #  CHARGEMENT & PRÉTRAITEMENT DES DONNÉES
-# =============================================================================
+
 
 def load_eda_data():
     viz = Visualisation(
@@ -46,9 +44,8 @@ def load_eda_data():
     
     return df, df_ml, kpis, df_new
 
-# =============================================================================
-#  FONCTIONS DE CRÉATION DES GRAPHIQUES
-# =============================================================================
+# GRAPHIQUES
+
 
 def create_evolution_chart(df):
     df_ev = df[['date_de_publication', 'poste']].copy()
@@ -125,9 +122,8 @@ def prepare_chart_data(df, df_ml, df_new):
         'etude': df_etude, 'companies': df_companies, 'recent': df_recent
     }
 
-# =============================================================================
-#  COMPOSANTS UI (HYBRIDE : MACHINE = COMPACT / TÉLÉPHONE = EMPILÉ)
-# =============================================================================
+# ====================================================
+
 
 def _kpi_card(color, icon, label, value, delta, delta_class="delta-up"):
     return dbc.Col(
@@ -137,8 +133,8 @@ def _kpi_card(color, icon, label, value, delta, delta_class="delta-up"):
             html.Div(value, className="kpi-value"),
             html.Div(html.Span(delta, className=delta_class), className="kpi-delta"),
         ], className=f"kpi-outer k-{color}"),
-        # ← ICI : 12 (téléphone), 6 (tablette), 3 (machine/desktop comme ton code original)
-        width={"size": 12, "sm": 6, "md": 6, "lg": 3},
+        width=3,
+        className="kpi-col"
     )
 
 def _chart_card(title, hint, graph_component):
@@ -164,9 +160,7 @@ PALETTES = {
     'companies': [[0, '#312E81'], [0.5, '#6366F1'], [1, '#A5B4FC']],
 }
 
-# =============================================================================
-# 🚀 FONCTION PRINCIPALE
-# =============================================================================
+# FONCTION DE CRÉATION DE LA PAGE EDA
 
 def create_eda_page():
     df, df_ml, kpis, df_new = load_eda_data()
@@ -197,25 +191,22 @@ def create_eda_page():
             _kpi_card("emerald", "📍", "Régions actives", f"{kpis['nombre_regions']:,}", "stable vs mois passé", delta_class="delta-zero"),
         ], className="g-3 mb-3"),
 
-        # ← ICI : lg=7/5 sur machine, 12/12 empilé sur téléphone
         dbc.Row([
-            dbc.Col(_chart_card("Évolution mensuelle des offres", "offres publiées par mois", _dcc_graph(fig_evolution, 220)), width={"size": 12, "lg": 7}),
-            dbc.Col(_chart_card("Répartition géographique", "top 10 régions", _dcc_graph(fig_region, 220)), width={"size": 12, "lg": 5}),
+            dbc.Col(_chart_card("Évolution mensuelle des offres", "offres publiées par mois", _dcc_graph(fig_evolution, 220)), width=7, className="chart-col-7"),
+            dbc.Col(_chart_card("Répartition géographique", "top 10 régions", _dcc_graph(fig_region, 220)), width=5, className="chart-col-5"),
         ], className="g-3 mb-3"),
 
-        # ← ICI : md=6/6 sur tablette+, 12/12 empilé sur téléphone
         dbc.Row([
-            dbc.Col(_chart_card("Types de contrats", "répartition par type", _dcc_graph(fig_contract, 230)), width={"size": 12, "md": 6}),
-            dbc.Col(_chart_card("Niveau d'études requis", "répartition des offres", _dcc_graph(fig_etude, 230)), width={"size": 12, "md": 6}),
+            dbc.Col(_chart_card("Types de contrats", "répartition par type", _dcc_graph(fig_contract, 230)), width=6, className="chart-col-6"),
+            dbc.Col(_chart_card("Niveau d'études requis", "répartition des offres", _dcc_graph(fig_etude, 230)), width=6, className="chart-col-6"),
         ], className="g-3 mb-3"),
 
         dbc.Row([
             dbc.Col(_chart_card("Top 20 compétences demandées", "par nombre d'offres · toutes catégories", _dcc_graph(fig_skills, 420)), width=12),
         ], className="g-3 mb-3"),
 
-        # ← ICI : lg=8/4 sur machine, 12/12 empilé sur téléphone
         dbc.Row([
-            dbc.Col(_chart_card("Top entreprises qui recrutent", "par volume d'offres publiées", _dcc_graph(fig_companies, 360)), width={"size": 12, "lg": 8}),
+            dbc.Col(_chart_card("Top entreprises qui recrutent", "par volume d'offres publiées", _dcc_graph(fig_companies, 360)), width=8, className="chart-col-8"),
             dbc.Col(
                 html.Div([
                     html.Div("Insights clés", className="s-card-title"),
@@ -237,7 +228,7 @@ def create_eda_page():
                         ]
                     ],
                 ], className="s-card"),
-                width={"size": 12, "lg": 4}
+                width=4, className="chart-col-4"
             ),
         ], className="g-3 mb-3"),
 
@@ -265,6 +256,6 @@ def create_eda_page():
                     {'if': {'row_index': 'odd'}, 'backgroundColor': 'rgba(255,255,255,0.012)'},
                     {'if': {'state': 'selected'}, 'backgroundColor': '#000000', 'border': '0.5px solid rgba(99,102,241,0.3)', 'color': "#E2E8F0"}
                 ],
-            ),
+               ),
         ], className="s-card"),
     ], className="eda-root")

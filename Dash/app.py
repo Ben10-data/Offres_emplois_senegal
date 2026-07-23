@@ -3,7 +3,7 @@ from dash import html, dcc, Input, Output, State, callback_context
 import dash_bootstrap_components as dbc
 
 from composant_reutisable import kpi_card, chart_card
-from sidebar import create_sidebar, create_sidebar_offcanvas  # ← import modifié
+from sidebar import create_sidebar, create_sidebar_offcanvas
 from eda1 import create_eda_page
 from matching import create_matching_page
 from competences import create_competences_page
@@ -14,40 +14,45 @@ external_stylesheets = [
 ]
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets, suppress_callback_exceptions=True)
 
+# Chargement des pages
 page_eda = create_eda_page()
 page_matching = create_matching_page()
 page_competences = create_competences_page()
 
+# Sidebars
 sidebar = create_sidebar()
-sidebar_mobile = create_sidebar_offcanvas()          # ← nouveau
+sidebar_mobile = create_sidebar_offcanvas()
 
+# Navbar
 navbar = dbc.NavbarSimple(
     children=[
-        dbc.Button(                                  # ← bouton burger, nouveau
+        dbc.Button(
             html.I(className="bi bi-list", style={"fontSize": "1.4rem"}),
             id="btn-sidebar-toggle",
             color="dark",
             className="d-lg-none me-2",
         ),
-        dbc.NavItem(dbc.NavLink("Dashboard Principale", href="#", id="nav-eda", active=True)),
-        dbc.NavItem(dbc.NavLink("Matching", href="#", id="nav-matching")),
-        dbc.NavItem(dbc.NavLink("Nuages des compétences", href="#", id="nav-competences")),
+        dbc.NavItem(dbc.NavLink("Dashboard", href="#", id="nav-eda", active=True, className="text-nowrap")),
+        dbc.NavItem(dbc.NavLink("Matching", href="#", id="nav-matching", className="text-nowrap")),
+        dbc.NavItem(dbc.NavLink("Compétences", href="#", id="nav-competences", className="text-nowrap")),
     ],
-    brand="",
+    brand="JobInsight",
+    brand_href="#",
     dark=True,
     color="dark",
     className="w-100",
-    style={"height": "66px", "z-index": 999}
+    style={"height": "66px", "z-index": 1030, "position": "sticky", "top": "0"}
 )
 
-# content_style supprimé, remplacé par une classe CSS
+# Contenu principal (initialisé avec page_eda par défaut)
 content = html.Div(id="page-content", children=page_eda, className="main-content")
 
-app.layout = html.Div([navbar, sidebar, sidebar_mobile, content])   # ← sidebar_mobile ajoutée
+app.layout = html.Div([navbar, sidebar, sidebar_mobile, content])
 
 
+# ── Callback 1 : Ouvrir/Fermer le menu mobile via le bouton burger ──
 @app.callback(
-    Output("offcanvas-sidebar", "is_open"),          # ← nouveau callback
+    Output("offcanvas-sidebar", "is_open"),
     Input("btn-sidebar-toggle", "n_clicks"),
     State("offcanvas-sidebar", "is_open"),
 )
@@ -57,55 +62,32 @@ def toggle_sidebar(n, is_open):
     return is_open
 
 
+# ── Callback 2 : Changer de page ET fermer le menu mobile ──
 @app.callback(
-    Output("page-content", "children"),
-    [Input("nav-eda", "n_clicks"),
-     Input("nav-matching", "n_clicks"),
-     Input("nav-competences", "n_clicks")]
+    [
+        Output("page-content", "children"),
+        Output("offcanvas-sidebar", "is_open", allow_duplicate=True)
+    ],
+    [
+        Input("nav-eda", "n_clicks"),
+        Input("nav-matching", "n_clicks"),
+        Input("nav-competences", "n_clicks")
+    ],
+    prevent_initial_call=True  # ← C'EST LA LIGNE QUI MANQUAIT ET QUE DASH EXIGE
 )
 def display_page(eda, matching, competences):
     ctx = callback_context
-    if not ctx.triggered:
-        return page_eda
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    pages = {"nav-eda": page_eda, "nav-matching": page_matching, "nav-competences": page_competences}
-    return pages.get(trigger_id, page_eda)
+    
+    pages = {
+        "nav-eda": page_eda, 
+        "nav-matching": page_matching, 
+        "nav-competences": page_competences
+    }
+    
+    # Retourne la page demandée ET force la fermeture du menu mobile (False)
+    return pages.get(trigger_id, page_eda), False
 
-
-def update_matching(n_clicks, skills, domain, location):
-    if not n_clicks:
-        n_clicks = 0
-    
-    if not skills:
-        skills = ["Python", "SQL"]
-    
-    base_score = 70 + len(skills) * 2
-    if domain == "Data Science":
-        base_score += 10
-    if location == "Dakar":
-        base_score += 5
-    
-    score = min(base_score, 98)
-    
-    offers = html.Div([
-        html.Div([
-            html.Strong(f"🥇 1. Data Scientist - Sonatel"),
-            html.Br(),
-            html.Small(f"Dakar • 800K - 1.2M FCFA • Match: {score}%", className="text-muted")
-        ], className="mb-2 p-2 rounded bg-secondary bg-opacity-25"),
-        html.Div([
-            html.Strong(f"🥈 2. ML Engineer - Dakar Digital Show"),
-            html.Br(),
-            html.Small(f"Dakar • 750K - 1.3M FCFA • Match: {score-7}%", className="text-muted")
-        ], className="mb-2 p-2 rounded bg-secondary bg-opacity-25"),
-        html.Div([
-            html.Strong(f"🥉 3. Data Analyst - Orange Sénégal"),
-            html.Br(),
-            html.Small(f"Dakar • 600K - 900K FCFA • Match: {score-14}%", className="text-muted")
-        ], className="p-2 rounded bg-secondary bg-opacity-25"),
-    ])
-    
-    return f"{score}%", offers
 
 # LANCEMENT
 if __name__ == "__main__":

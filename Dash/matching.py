@@ -4,7 +4,7 @@ import dash_bootstrap_components as dbc
 import requests
 from lecture_table import lecture
 
-# ── Données competences ────────────────────────────────────────────────────────────────────
+# ── Données competences─
 
 data = lecture("offres_emploi_new").copy()
 data = data.explode(column="competence")
@@ -117,7 +117,7 @@ def build_results_panel(recommendations):
     ])
 
 
-# ── Layout ─────────────────────────────────────────────────────────────────────
+# ── Layout
 
 def create_matching_page():
     return html.Div([
@@ -134,7 +134,7 @@ def create_matching_page():
 
         dbc.Row([
 
-            # ── Panel profil ─────────────────────────────────────────
+            # ── Panel profil 
             dbc.Col([
                 html.Div([
                     html.Div("Votre profil", className="panel-title"),

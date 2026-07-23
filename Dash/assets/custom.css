@@ -67,11 +67,6 @@ body, .dash-debug-menu { font-family: 'DM Sans', sans-serif !important; backgrou
 .previous-page, .next-page, .page-number { background: var(--card) !important; color: #94A3B8 !important; border: 0.5px solid var(--border) !important; border-radius: 6px !important; font-family: 'DM Mono', monospace !important; }
 
 
-/* ============================================================
-   assets/custom.css
-   Dashboard Compétences — Sénégal Emploi
-   ============================================================ */
-
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
 
 /* ── Reset de base ────────────────────────────────────────── */
@@ -606,20 +601,47 @@ html, body { overflow-x: hidden; max-width: 100%; }
     font-size: 10px !important;
     padding: 6px 8px !important;
   }
+}  
+
+
+   /* CORRECTION SCROLL HORIZONTAL BULLES (MOBILE) */
+
+
+.bubble-scroll-window {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  max-height: 580px;
+  -webkit-overflow-scrolling: touch; /* Active le scroll fluide sur iOS/Android */
+  width: 100%;
 }
 
-/* Bubble chart : scroll horizontal contrôlé sur mobile (voir competences.py) */
-.bubble-scroll-window {
-  overflow-x: auto;
-  overflow-y: auto;
-  max-height: 580px;
-}
 @media (max-width: 576px) {
   .bubble-scroll-window .js-plotly-plot {
-    min-width: 500px;
+    min-width: 850px !important; 
   }
-}
+} 
 
 @media (max-width: 992px) {
-  .sidebar-fixed { display: none !important; }
+  .sidebar-fixed { display:none !important; }
+}  
+
+/* Desktop : comportement par défaut (défini par width dans Python) */
+.kpi-col { flex: 0 0 25%; max-width: 25%; }
+.chart-col-7 { flex: 0 0 58.333333%; max-width: 58.333333%; }
+.chart-col-5 { flex: 0 0 41.666667%; max-width: 41.666667%; }
+.chart-col-6 { flex: 0 0 50%; max-width: 50%; }
+.chart-col-8 { flex: 0 0 66.666667%; max-width: 66.666667%; }
+.chart-col-4 { flex: 0 0 33.333333%; max-width: 33.333333%; }
+
+/* Tablette et mobile : tout empilé */
+@media (max-width: 992px) {
+  .kpi-col,
+  .chart-col-7,
+  .chart-col-5,
+  .chart-col-6,
+  .chart-col-8,
+  .chart-col-4 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
 }
