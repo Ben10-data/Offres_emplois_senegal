@@ -34,15 +34,8 @@ DataWarehouse/.env
 Fastapi/app/__pycache__/
 Dash/__pycache__/competences.cpython-312.pyc
 Dash/mlops.py
-
-
-
-
-
-
-
-
-
+zenML/src/steps/__pycache__/
+zenML/src/utils/__pycache__/
 
 
 

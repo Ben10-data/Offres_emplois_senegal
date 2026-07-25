@@ -14,7 +14,7 @@ services:
           POSTGRES_PASSWORD: ${Post_pwd_warehouse}
           POSTGRES_DB: ${DB_Warehouse}
     volumes:
-      - ./DataWarhouse_data:/var/lib/postgresql/data # nous allons persister nos données ici 
+      - ./DataWarhouse_data:/var/lib/postgresql/data 
     networks:
       - offres_emplois_dakar
     
