@@ -9,4 +9,4 @@ COPY . .
 
 EXPOSE 8050
 
-CMD ["sh","-c","gunicorn dashboard:server --bind 0.0.0.0:${PORT:-8050}"]
+CMD ["sh","-c","gunicorn app:server --bind 0.0.0.0:${PORT:-8050}"]
