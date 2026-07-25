@@ -40,7 +40,7 @@ app = FastAPI()
 
 @app.get("/")
 def read_root():
-    return {"message": "API fonctionne 🚀"}
+    return {"message": "API fonctionne "}
 
 # ── TF-IDF vectoriel ──────────────────────────────────────────
 @app.post("/Recomendation_vectoriel")
@@ -55,7 +55,7 @@ def get_recommendation_vectoriel(item: Item_tfidf):
 def get_recommendation_vectoriel_info():
     return {"message": "Utilisez POST avec {competences, region}"}
 
-# ── MiniBERT ──────────────────────────────────────────────────
+# ── MiniBERT ────────────
 @app.post("/Recomendation_bert")
 def get_recommendation_bert(item: Item_minibert):
     try:
