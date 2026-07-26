@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -6,14 +8,20 @@ import dash_bootstrap_components as dbc
 
 from composant_reutisable import kpi_card, chart_card, kpi_card_glacial
 from connexion_warehouse import Visualisation
+from dotenv import load_dotenv
+
+load_dotenv()
 
 #  CHARGEMENT & PRÉTRAITEMENT DES DONNÉES
 
 
 def load_eda_data():
     viz = Visualisation(
-        host="postgres_warehouse", port=5432,
-        database="datawarehouse", user="admin", password="admin_pwd"
+        host=os.getenv("DB_HOST"),
+        port=int(os.getenv("DB_PORT")),
+        database=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
     )
     
     df_new = viz.get_data("offres_emploi_new").copy()
