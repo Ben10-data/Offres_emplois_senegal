@@ -278,7 +278,7 @@ def run_matching(n_clicks, skills, region, experience):
     except requests.exceptions.ConnectionError:
         return html.Div([
             html.Div("✕", className="empty-icon"),
-            html.Div("impossible de joindre l'API · vérifiez que le service est démarré",
+            html.Div("Le modele de matching n\'est pas deployé dans un serveur distant mais fonctionne en local. gestion des sources phase teste",
                      className="empty-text"),
         ], className="empty-state")
 
