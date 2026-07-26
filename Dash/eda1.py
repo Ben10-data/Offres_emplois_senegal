@@ -116,7 +116,7 @@ def prepare_chart_data(df, df_ml, df_new):
     etudes = df["niveau_etude"].explode().dropna().str.split(" - ").explode()
     df_etude = etudes.value_counts().head(25).reset_index().rename(columns={'index': 'niveau_etude', 'count': 'Count'})
     
-    df_companies = df["entreprise"].value_counts().reset_index().head(10).rename(columns={'index': 'entreprise', 'count': 'count'}).sort_values("Count", ascending=False)
+    df_companies = df["entreprise"].value_counts().reset_index().head(10).rename(columns={'index': 'entreprise', 'count': 'count'}).sort_values("count", ascending=False)
     
     df_new["region_"] = df_new["region"].apply(lambda x: ", ".join(x) if isinstance(x, list) else x)
     df_new["contracts"] = df_new["contrat"].apply(lambda x: ", ".join(x) if isinstance(x, list) else x)
