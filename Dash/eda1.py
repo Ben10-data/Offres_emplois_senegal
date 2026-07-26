@@ -102,7 +102,7 @@ def create_horizontal_bar(df, x_col, y_col, colorscale, height=360):
         font=dict(family='DM Sans, sans-serif', color='#94A3B8', size=11),
         margin=dict(l=10, r=60, t=10, b=10), height=height, showlegend=False,
         xaxis=dict(showgrid=False, zeroline=False, title=None),
-        yaxis=dict(gridcolor='rgba(148,163,184,0.06)', tickfont=dict(size=11), title=None),
+        yaxis=dict(gridcolor='rgba(148,163,184,0.06)', tickfont=dict(size=11), title=None, autorange="reversed" ),
     )
     return fig
 
