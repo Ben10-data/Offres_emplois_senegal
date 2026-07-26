@@ -2,7 +2,6 @@ import dash_bootstrap_components as dbc
 from dash import html
 
 def _sidebar_content():
-    """Contenu partagé entre la version desktop (fixe) et mobile (offcanvas)"""
     return [
         # Logo / Brand
         html.Div(

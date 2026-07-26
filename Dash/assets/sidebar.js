@@ -1,17 +1,23 @@
-document.addEventListener("click", function (e) {
+document.addEventListener("DOMContentLoaded", function () {
 
-    if (
-        e.target.closest("#nav-eda") ||
-        e.target.closest("#nav-matching") ||
-        e.target.closest("#nav-competences")
-    ) {
+    document.addEventListener("click", function (e) {
+
+        const link = e.target.closest(
+            "#nav-eda, #nav-matching, #nav-competences"
+        );
+
+        if (!link) return;
 
         const offcanvas = document.getElementById("offcanvas-sidebar");
 
-        if (offcanvas && offcanvas.classList.contains("show")) {
+        if (!offcanvas) return;
 
-            bootstrap.Offcanvas.getInstance(offcanvas).hide();
+        const bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvas);
 
+        if (bsOffcanvas) {
+            bsOffcanvas.hide();
         }
-    }
+
+    });
+
 });
