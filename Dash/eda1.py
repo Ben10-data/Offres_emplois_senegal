@@ -108,7 +108,7 @@ def create_horizontal_bar(df, x_col, y_col, colorscale, height=360):
 
 def prepare_chart_data(df, df_ml, df_new):
     skills = df["competence"].explode().dropna()
-    df_skills = skills.value_counts().head(21).reset_index().rename(columns={'index': 'competence', 'count': 'Count'})
+    df_skills = skills.value_counts().head(21).reset_index().rename(columns={'index': 'competence', 'count': 'Count'}).sort_values("Count", ascending=False)
     
     df_region = df_ml["region"].value_counts().head(10).reset_index().rename(columns={'index': 'region', 'count': 'Count'})
     df_contract = df_ml["contrat"].value_counts().reset_index().rename(columns={'index': 'contrat', 'count': 'Count'})
@@ -116,7 +116,7 @@ def prepare_chart_data(df, df_ml, df_new):
     etudes = df["niveau_etude"].explode().dropna().str.split(" - ").explode()
     df_etude = etudes.value_counts().head(25).reset_index().rename(columns={'index': 'niveau_etude', 'count': 'Count'})
     
-    df_companies = df["entreprise"].value_counts().reset_index().head(10).rename(columns={'index': 'entreprise', 'count': 'count'})
+    df_companies = df["entreprise"].value_counts().reset_index().head(10).rename(columns={'index': 'entreprise', 'count': 'count'}).sort_values("Count", ascending=False)
     
     df_new["region_"] = df_new["region"].apply(lambda x: ", ".join(x) if isinstance(x, list) else x)
     df_new["contracts"] = df_new["contrat"].apply(lambda x: ", ".join(x) if isinstance(x, list) else x)
