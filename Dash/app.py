@@ -14,6 +14,8 @@ external_stylesheets = [
 ]
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets, suppress_callback_exceptions=True)
 
+server = app.server
+
 # Chargement des pages
 page_eda = create_eda_page()
 page_matching = create_matching_page()
@@ -44,13 +46,11 @@ navbar = dbc.NavbarSimple(
     style={"height": "66px", "z-index": 1030, "position": "sticky", "top": "0"}
 )
 
-# Contenu principal (initialisé avec page_eda par défaut)
 content = html.Div(id="page-content", children=page_eda, className="main-content")
 
 app.layout = html.Div([navbar, sidebar, sidebar_mobile, content])
 
 
-# ── Callback 1 : Ouvrir/Fermer le menu mobile via le bouton burger ──
 @app.callback(
     Output("offcanvas-sidebar", "is_open"),
     Input("btn-sidebar-toggle", "n_clicks"),
@@ -62,7 +62,6 @@ def toggle_sidebar(n, is_open):
     return is_open
 
 
-# ── Callback 2 : Changer de page ET fermer le menu mobile ──
 @app.callback(
     [
         Output("page-content", "children"),
@@ -85,7 +84,6 @@ def display_page(eda, matching, competences):
         "nav-competences": page_competences
     }
     
-    # Retourne la page demandée ET force la fermeture du menu mobile (False)
     return pages.get(trigger_id, page_eda), False
 
 
