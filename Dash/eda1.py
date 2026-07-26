@@ -8,9 +8,7 @@ import dash_bootstrap_components as dbc
 
 from composant_reutisable import kpi_card, chart_card, kpi_card_glacial
 from connexion_warehouse import Visualisation
-from dotenv import load_dotenv
 
-load_dotenv()
 
 #  CHARGEMENT & PRÉTRAITEMENT DES DONNÉES
 

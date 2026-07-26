@@ -3,9 +3,6 @@ import pandas as pd
 import psycopg2
 
 
-from dotenv import load_dotenv
-
-load_dotenv()
 
 
 def lecture(table):
